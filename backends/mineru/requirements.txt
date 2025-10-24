@@ -1,0 +1,3 @@
+# Mineru backend dependencies
+# This file will contain Mineru-specific dependencies
+# TODO: Add actual Mineru dependencies
