@@ -49,6 +49,9 @@ uv pip install matplotlib || echo "⚠ matplotlib installation failed (optional)
 
 # Try flash-attn (optional, may fail without CUDA_HOME)
 echo "Attempting to install flash-attn (optional)..."
+# Install wheel first (required for flash-attn build but not declared as dependency)
+uv pip install wheel
+echo "Installing flash-attn with wheel support..."
 uv pip install flash-attn --no-build-isolation || echo "⚠ Flash attention optional, continuing without it..."
 
 # Download DeepSeek OCR model
