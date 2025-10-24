@@ -10,7 +10,7 @@ import time
 import base64
 import io
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List, Tuple
 
 import torch
 from PIL import Image, ImageDraw
@@ -183,24 +183,61 @@ class DeepSeekOCRBackend(OCRBackend):
 
     def ocr_pdf(self, pdf_path: str, **kwargs) -> Dict[str, Any]:
         """
-        Perform OCR on a PDF document using DeepSeek OCR.
+        Perform OCR on a PDF document using DeepSeek OCR with optimized parallel processing.
 
         Args:
             pdf_path (str): Path to input PDF
-            **kwargs: Additional parameters
+            **kwargs: Additional parameters (pages, etc.)
 
         Returns:
             dict: OCR results in unified format
         """
-        # TODO: Implement PDF processing
-        # For now, return placeholder response
-        return create_unified_response(
-            success=False,
-            backend="deepseek-ocr",
-            raw_result={"deepseek": "", "mineru": {}},
-            markdown="PDF processing not yet implemented",
-            image_name=Path(pdf_path).name
-        )
+        if not self.model_loaded:
+            return create_unified_response(
+                success=False,
+                backend="deepseek-ocr",
+                raw_result={"deepseek": "", "mineru": {}},
+                markdown="Model not loaded",
+                image_name=Path(pdf_path).name
+            )
+
+        start_time = time.time()
+
+        try:
+            # Extract selected pages from kwargs
+            selected_pages = kwargs.get('pages', None)
+
+            # Process PDF using optimized DeepSeek approach
+            raw_output, markdown_result = self._process_pdf_with_deepseek(pdf_path, selected_pages)
+
+            # Generate bounding boxes image (placeholder for now)
+            boxes_image = ""  # PDF bounding box visualization would be more complex
+
+            processing_time = time.time() - start_time
+
+            return create_unified_response(
+                success=True,
+                backend="deepseek-ocr",
+                raw_result={"deepseek": raw_output, "mineru": {}},
+                markdown=markdown_result,
+                source_markdown=markdown_result,
+                boxes_image=boxes_image,
+                processing_time=processing_time,
+                image_name=Path(pdf_path).name
+            )
+
+        except Exception as e:
+            processing_time = time.time() - start_time
+            print(f"✗ PDF processing failed: {e}")
+
+            return create_unified_response(
+                success=False,
+                backend="deepseek-ocr",
+                raw_result={"deepseek": "", "mineru": {}},
+                markdown=f"PDF processing failed: {str(e)}",
+                processing_time=processing_time,
+                image_name=Path(pdf_path).name
+            )
 
     def get_health_status(self) -> Dict[str, Any]:
         """
@@ -216,6 +253,104 @@ class DeepSeekOCRBackend(OCRBackend):
             "backend": "deepseek-ocr",
             "timestamp": time.time()
         }
+
+    def _process_pdf_with_deepseek(self, pdf_path: str, selected_pages: List[int] = None) -> Tuple[Dict[str, Any], str]:
+        """
+        Process PDF using optimized DeepSeek approach with parallel page processing.
+
+        Args:
+            pdf_path: Path to PDF file
+            selected_pages: List of page numbers to process (1-indexed)
+
+        Returns:
+            Tuple of (raw_output, markdown_content)
+        """
+        import fitz
+        import io
+        from concurrent.futures import ThreadPoolExecutor
+        from tqdm import tqdm
+
+        try:
+            # Open PDF document
+            doc = fitz.open(pdf_path)
+
+            # Determine pages to process
+            if selected_pages is None:
+                pages_to_process = list(range(len(doc)))
+            else:
+                # Convert to 0-indexed and validate
+                pages_to_process = [p-1 for p in selected_pages if 1 <= p <= len(doc)]
+
+            if not pages_to_process:
+                raise ValueError("No valid pages selected for processing")
+
+            # Convert PDF pages to high-quality images
+            images = []
+            zoom = 144 / 72.0  # 144 DPI
+            matrix = fitz.Matrix(zoom, zoom)
+
+            for page_idx in pages_to_process:
+                page = doc[page_idx]
+                pixmap = page.get_pixmap(matrix=matrix, alpha=False)
+                img_data = pixmap.tobytes("png")
+                img = Image.open(io.BytesIO(img_data))
+                images.append(img)
+
+            doc.close()
+
+            # Process images in parallel using ThreadPoolExecutor
+            batch_inputs = []
+            with ThreadPoolExecutor(max_workers=min(len(images), 4)) as executor:
+                # Prepare batch inputs
+                for image in images:
+                    cache_item = {
+                        "prompt": DEEPSEEK_PROMPT,
+                        "multi_modal_data": {
+                            "image": self.processor.tokenize_with_images(
+                                images=[image], bos=True, eos=True, cropping=CROP_MODE
+                            )
+                        },
+                    }
+                    batch_inputs.append(cache_item)
+
+            # Generate OCR results for all pages
+            outputs_list = self.engine.generate(
+                batch_inputs,
+                sampling_params=self.sampling_params
+            )
+
+            # Combine results from all pages
+            all_contents = []
+            raw_outputs = []
+
+            for output, page_num in zip(outputs_list, pages_to_process):
+                content = output.outputs[0].text
+
+                # Clean up the output
+                if '<|endoftext|>' in content:
+                    content = content.replace('<|endoftext|>', '')
+
+                # Add page separator
+                page_separator = f'\n<--- Page {page_num + 1} --->\n'
+                all_contents.append(content + page_separator)
+                raw_outputs.append({
+                    "page": page_num + 1,
+                    "raw_output": content
+                })
+
+            # Combine all page results
+            markdown_content = "\n".join(all_contents)
+            raw_output = {
+                "pages": raw_outputs,
+                "total_pages": len(pages_to_process),
+                "processed_pages": [p + 1 for p in pages_to_process]
+            }
+
+            return raw_output, markdown_content
+
+        except Exception as e:
+            print(f"Error in PDF processing: {e}")
+            raise
 
     def cleanup(self):
         """

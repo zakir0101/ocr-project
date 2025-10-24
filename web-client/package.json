@@ -12,7 +12,8 @@
     "react-dom": "^18.2.0",
     "react-markdown": "^9.0.1",
     "axios": "^1.5.0",
-    "lucide-react": "^0.288.0"
+    "lucide-react": "^0.288.0",
+    "pdfjs-dist": "^3.11.174"
   },
   "devDependencies": {
     "@types/react": "^18.2.15",

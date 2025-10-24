@@ -365,3 +365,510 @@ body {
 .server-button.refresh:hover {
   background: #138496;
 }
+
+/* Backend Selector Styles */
+.backend-selector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.backend-selector label {
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.backend-selector select {
+  padding: 10px 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+  min-width: 200px;
+  transition: border-color 0.3s ease;
+}
+
+.backend-selector select:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.backend-selector select:disabled {
+  background-color: #f8f9fa;
+  cursor: not-allowed;
+}
+
+.backend-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+}
+
+.backend-info .status {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.backend-info .status.healthy {
+  background: #d4edda;
+  color: #155724;
+}
+
+.backend-info .status.unhealthy {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.backend-info .description {
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* Comparison View Styles */
+.comparison-section {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
+}
+
+.comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.comparison-card {
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fafafa;
+}
+
+.comparison-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background: white;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.comparison-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 18px;
+}
+
+.comparison-header .status {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.comparison-header .status.success {
+  background: #d4edda;
+  color: #155724;
+}
+
+.comparison-header .status.error {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.comparison-tabs {
+  display: flex;
+  border-bottom: 1px solid #ddd;
+  background: white;
+}
+
+.comparison-tabs .tab {
+  flex: 1;
+  padding: 10px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.comparison-tabs .tab.active {
+  border-bottom: 2px solid #007bff;
+  color: #007bff;
+  font-weight: 500;
+}
+
+.comparison-content {
+  min-height: 200px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.comparison-metrics {
+  padding: 15px 20px;
+  background: white;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.comparison-error {
+  padding: 20px;
+  background: #f8d7da;
+  color: #721c24;
+  text-align: center;
+}
+
+.comparison-summary {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.comparison-summary h3 {
+  margin: 0 0 15px 0;
+  color: #333;
+  text-align: center;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background: white;
+  border-radius: 5px;
+  border: 1px solid #e9ecef;
+}
+
+.summary-backend {
+  font-weight: 500;
+  color: #333;
+}
+
+.summary-time {
+  color: #007bff;
+  font-weight: 500;
+}
+
+/* Result Metrics */
+.result-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 15px 0;
+  border-top: 1px solid #e9ecef;
+  margin-top: 20px;
+  justify-content: center;
+}
+
+.metric {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  color: #666;
+  background: #f8f9fa;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.metric strong {
+  color: #333;
+}
+
+.metric.success {
+  background: #d4edda;
+  border-color: #c3e6cb;
+  color: #155724;
+}
+
+.metric.warning {
+  background: #fff3cd;
+  border-color: #ffeaa7;
+  color: #856404;
+}
+
+.metric.error {
+  background: #f8d7da;
+  border-color: #f5c6cb;
+  color: #721c24;
+}
+
+/* Enhanced Comparison Metrics */
+.comparison-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  padding: 15px 20px;
+  background: white;
+  border-top: 1px solid #e9ecef;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.comparison-metrics .metric {
+  margin: 0;
+}
+
+/* Performance Summary Enhancements */
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background: white;
+  border-radius: 5px;
+  border: 1px solid #e9ecef;
+  transition: all 0.2s ease;
+}
+
+.summary-item:hover {
+  background: #f8f9fa;
+  border-color: #007bff;
+}
+
+.summary-item.fastest {
+  background: #d4edda;
+  border-color: #c3e6cb;
+}
+
+.summary-item.slowest {
+  background: #f8d7da;
+  border-color: #f5c6cb;
+}
+/* PDF Preview Styles */
+.page-selection-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 5px;
+  border: 1px solid #e9ecef;
+}
+
+.selection-summary {
+  font-size: 14px;
+  color: #666;
+}
+
+.selected-pages {
+  margin-left: 5px;
+  color: #007bff;
+  font-weight: 500;
+}
+
+.selection-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.button.small {
+  padding: 6px 12px;
+  font-size: 12px;
+  background: #6c757d;
+}
+
+.button.small:hover {
+  background: #5a6268;
+}
+
+.pdf-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.pdf-page-preview {
+  position: relative;
+  border: 2px solid #e9ecef;
+  border-radius: 5px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.pdf-page-preview:hover {
+  border-color: #007bff;
+  transform: translateY(-2px);
+}
+
+.pdf-page-preview.selected {
+  border-color: #007bff;
+  background: #e7f3ff;
+}
+
+.page-checkbox {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 3px;
+  padding: 2px;
+  z-index: 2;
+}
+
+.pdf-preview-image {
+  width: 100%;
+  height: 150px;
+  object-fit: contain;
+  background: #f8f9fa;
+}
+
+.page-number {
+  text-align: center;
+  padding: 5px;
+  font-size: 12px;
+  color: #666;
+  background: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+}
+
+.pdf-page-preview.more-pages {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  border: 2px dashed #dee2e6;
+  cursor: default;
+}
+
+.more-pages-text {
+  color: #6c757d;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.pdf-page-preview.more-pages:hover {
+  border-color: #dee2e6;
+  transform: none;
+}
+
+/* Enhanced Upload Experience Styles */
+.preview-progress {
+  margin-top: 15px;
+  width: 100%;
+  max-width: 300px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: #e9ecef;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #007bff;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+  padding: 10px 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.file-type-badge {
+  background: #007bff;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.file-name {
+  font-weight: 500;
+  color: #333;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-size {
+  color: #6c757d;
+  font-size: 12px;
+  background: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+}
+
+/* PDF Results Display Enhancements */
+.preview-image.pdf-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.pdf-info-icon {
+  color: #007bff;
+  margin-bottom: 15px;
+}
+
+.pdf-info-details {
+  text-align: center;
+  font-size: 14px;
+  color: #666;
+}
+
+.pdf-info-details div {
+  margin-bottom: 5px;
+}
+
+.pdf-info-details strong {
+  color: #333;
+}
+
+/* Enhanced PDF metrics */
+.metric.pdf-pages {
+  background: #e7f3ff;
+  border-color: #b3d9ff;
+  color: #0066cc;
+}
+
+.metric.pdf-pages strong {
+  color: #004d99;
+}

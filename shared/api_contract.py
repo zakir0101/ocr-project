@@ -16,6 +16,10 @@ CLIENT_REQUEST_SCHEMA = {
             "type": "file",
             "description": "Input image file for OCR processing"
         },
+        "pdf": {
+            "type": "file",
+            "description": "Input PDF file for OCR processing"
+        },
         "backend": {
             "type": "string",
             "enum": ["deepseek-ocr", "mineru"],
@@ -24,9 +28,18 @@ CLIENT_REQUEST_SCHEMA = {
         "prompt": {
             "type": "string",
             "description": "Optional custom prompt for OCR processing"
+        },
+        "pages": {
+            "type": "array",
+            "items": {"type": "integer"},
+            "description": "List of page numbers to process (1-indexed)"
         }
     },
-    "required": ["image", "backend"]
+    "required": ["backend"],
+    "oneOf": [
+        {"required": ["image"]},
+        {"required": ["pdf"]}
+    ]
 }
 
 
@@ -48,8 +61,8 @@ UNIFIED_RESPONSE_SCHEMA = {
             "description": "Backend-specific raw output format",
             "properties": {
                 "deepseek": {
-                    "type": "string",
-                    "description": "DeepSeek raw text output with detection markers"
+                    "type": ["string", "object"],
+                    "description": "DeepSeek raw text output with detection markers or multi-page object"
                 },
                 "mineru": {
                     "type": "object",
@@ -73,12 +86,26 @@ UNIFIED_RESPONSE_SCHEMA = {
             "type": "number",
             "description": "Time taken for OCR processing in seconds"
         },
-        "image_name": {
+        "file_name": {
             "type": "string",
-            "description": "Name of the processed image file"
+            "description": "Name of the processed file"
+        },
+        "file_type": {
+            "type": "string",
+            "enum": ["image", "pdf"],
+            "description": "Type of processed file"
+        },
+        "page_count": {
+            "type": "integer",
+            "description": "Total number of pages in PDF (for multi-page files)"
+        },
+        "processed_pages": {
+            "type": "array",
+            "items": {"type": "integer"},
+            "description": "List of processed page numbers (1-indexed)"
         }
     },
-    "required": ["success", "backend", "raw_result", "markdown", "processing_time"]
+    "required": ["success", "backend", "raw_result", "markdown", "processing_time", "file_name"]
 }
 
 

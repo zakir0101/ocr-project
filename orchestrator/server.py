@@ -10,6 +10,7 @@ import sys
 import time
 import logging
 import requests
+import json
 from pathlib import Path
 
 # Add project root to path for imports
@@ -170,6 +171,11 @@ def ocr_image():
             # Return backend response directly (already in unified format)
             backend_response = response.json()
             backend_response["processing_time"] = processing_time
+
+            # Ensure response includes file_type for image
+            if "file_type" not in backend_response:
+                backend_response["file_type"] = "image"
+
             return jsonify(backend_response)
         else:
             # Handle backend error
@@ -210,13 +216,14 @@ def ocr_image():
 @app.route('/ocr/pdf', methods=['POST'])
 def ocr_pdf():
     """
-    Process PDF OCR request by routing to specified backend.
+    Process PDF OCR request by routing to specified backend with multi-page support.
 
     Client request format:
     {
         "pdf": file,
         "backend": "deepseek-ocr" | "mineru",
-        "prompt": "optional custom prompt"
+        "prompt": "optional custom prompt",
+        "pages": "[1,2,3]"  # Optional JSON string of page numbers (1-indexed)
     }
     """
     start_time = time.time()
@@ -242,6 +249,20 @@ def ocr_pdf():
 
     pdf_file = request.files['pdf']
     prompt = request.form.get('prompt', '')
+    pages_json = request.form.get('pages', '')
+
+    # Parse page selection if provided
+    selected_pages = None
+    if pages_json:
+        try:
+            selected_pages = json.loads(pages_json)
+            if not isinstance(selected_pages, list):
+                return jsonify({"error": "Pages parameter must be a JSON array"}), 400
+            # Validate page numbers are positive integers
+            if not all(isinstance(p, int) and p > 0 for p in selected_pages):
+                return jsonify({"error": "Page numbers must be positive integers"}), 400
+        except json.JSONDecodeError:
+            return jsonify({"error": "Invalid pages JSON format"}), 400
 
     # Save uploaded file temporarily
     temp_path = f"/tmp/{pdf_file.filename}"
@@ -254,6 +275,10 @@ def ocr_pdf():
         # Prepare files and data for backend request
         files = {'pdf': (pdf_file.filename, open(temp_path, 'rb'), pdf_file.content_type)}
         data = {'prompt': prompt} if prompt else {}
+
+        # Add page selection to data if specified
+        if selected_pages:
+            data['pages'] = json.dumps(selected_pages)
 
         # Forward request to backend
         response = requests.post(
@@ -269,6 +294,11 @@ def ocr_pdf():
             # Return backend response directly (already in unified format)
             backend_response = response.json()
             backend_response["processing_time"] = processing_time
+
+            # Ensure response includes file_type for PDF
+            if "file_type" not in backend_response:
+                backend_response["file_type"] = "pdf"
+
             return jsonify(backend_response)
         else:
             # Handle backend error

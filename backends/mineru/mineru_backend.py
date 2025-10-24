@@ -264,7 +264,7 @@ class MineruBackend(OCRBackend):
         Args:
             file_path: Path to input file
             output_dir: Output directory for Mineru results
-            **kwargs: Additional parameters
+            **kwargs: Additional parameters (pages, etc.)
 
         Returns:
             tuple: (raw_output_dict, markdown_content)
@@ -277,6 +277,22 @@ class MineruBackend(OCRBackend):
 
             # Read file bytes
             file_bytes = self.read_fn(file_path)
+
+            # Handle page selection for PDFs
+            selected_pages = kwargs.get('pages', None)
+            start_page_id = 0
+            end_page_id = None
+
+            if selected_pages and len(selected_pages) > 0:
+                # Convert to 0-indexed for Mineru
+                start_page_id = min(selected_pages) - 1
+                end_page_id = max(selected_pages) - 1
+
+            # Apply page selection if specified
+            if start_page_id > 0 or end_page_id is not None:
+                file_bytes = self.convert_pdf_bytes_to_bytes_by_pypdfium2(
+                    file_bytes, start_page_id, end_page_id
+                )
 
             # Process with Mineru pipeline
             (

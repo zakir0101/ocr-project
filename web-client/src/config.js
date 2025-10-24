@@ -1,50 +1,60 @@
-// Configuration for DeepSeek OCR Client
+// Configuration for Multi-Backend OCR Client
 // This file allows easy configuration for different deployment environments
 
 const config = {
   // Server configuration
   server: {
-    // Static server URL - always use localhost:5000
-    baseUrl: 'http://localhost:5000',
+    // Orchestrator URL - main entry point for all OCR requests
+    baseUrl: 'http://localhost:8080',
 
     // API endpoints
     endpoints: {
       ocrImage: '/ocr/image',
+      ocrPdf: '/ocr/pdf',
       health: '/health',
-      images: '/image'
+      backends: '/backends'
     }
+  },
+
+  // Backend options
+  backends: {
+    options: [
+      { value: 'deepseek-ocr', label: 'DeepSeek OCR', description: 'DeepSeek OCR Backend' },
+      { value: 'mineru', label: 'Mineru', description: 'Mineru Backend' }
+    ],
+    default: 'deepseek-ocr'
   },
 
   // Application settings
   app: {
-    name: 'DeepSeek OCR',
-    version: '1.0.0',
-    description: 'OCR with DeepSeek AI models',
+    name: 'Multi-Backend OCR',
+    version: '2.0.0',
+    description: 'OCR with multiple AI backends (DeepSeek & Mineru)',
 
     // File upload settings
     upload: {
-      maxFileSize: 10 * 1024 * 1024, // 10MB
-      allowedTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+      maxFileSize: 50 * 1024 * 1024, // 50MB (increased for PDFs)
+      allowedTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'],
 
       // Validation messages
       messages: {
-        fileTooLarge: 'File size must be less than 10MB',
-        invalidType: 'Please upload a valid image file (JPEG, PNG, WebP, GIF)',
+        fileTooLarge: 'File size must be less than 50MB',
+        invalidType: 'Please upload a valid image (JPEG, PNG, WebP, GIF) or PDF file',
         uploadError: 'Failed to upload file. Please try again.'
       }
     },
 
     // OCR processing settings
     processing: {
-      timeout: 30000, // 30 seconds
+      timeout: 120000, // 120 seconds (matches orchestrator timeout)
       retryAttempts: 3,
 
-      // Default prompts
+      // Default prompts (passed to backends)
       prompts: {
-        document: '<image>\n<|grounding|>Convert the document to markdown.',
-        freeOcr: '<image>\nFree OCR.',
-        parseFigure: '<image>\nParse the figure.',
-        describe: '<image>\nDescribe this image in detail.'
+        document: 'Extract text from this document and convert to markdown format.',
+        freeOcr: 'Perform OCR on this image.',
+        parseFigure: 'Parse the figure and extract information.',
+        describe: 'Describe this image in detail.'
       }
     }
   },
@@ -91,6 +101,34 @@ export const getApiUrl = (endpoint) => {
 // Development mode check
 export const isDevelopment = () => {
   return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+};
+
+// Backend selection helpers
+export const getBackendOptions = () => {
+  return config.backends.options;
+};
+
+export const getDefaultBackend = () => {
+  return config.backends.default;
+};
+
+export const getBackendLabel = (backendValue) => {
+  const backend = config.backends.options.find(b => b.value === backendValue);
+  return backend ? backend.label : backendValue;
+};
+
+export const getBackendDescription = (backendValue) => {
+  const backend = config.backends.options.find(b => b.value === backendValue);
+  return backend ? backend.description : backendValue;
+};
+
+// Comparison mode helpers
+export const isComparisonMode = (selectedBackend) => {
+  return selectedBackend === 'comparison';
+};
+
+export const getComparisonBackends = () => {
+  return config.backends.options.map(b => b.value);
 };
 
 export default config;
