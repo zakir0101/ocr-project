@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./deploy-vast.sh)",
+      "Bash(vastai search offers 'gpu_name == \"\"\"\"RTX_4080\"\"\"\" compute_cap > 800' -o 'dph')",
+      "mcp__context7__resolve-library-id"
+    ],
+    "deny": [
+      "Read(**/image_process.py)",
+      "Read(/tmp/**/process/image_process.py)",
+      "Read(/tmp/DeepSeek-OCR/DeepSeek-OCR-master/DeepSeek-OCR-vllm/process/image_process.py)"
+    ],
+    "ask": []
+  }
+}
