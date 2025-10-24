@@ -47,15 +47,35 @@ uv pip install flask flask-cors
 echo "Installing optional packages..."
 uv pip install matplotlib || echo "⚠ matplotlib installation failed (optional)"
 
-# Install flash-attn (required for optimal performance)
-echo "Installing flash-attn (required for optimal performance)..."
-# Set CUDA_HOME environment variable if not already set
-export CUDA_HOME=${CUDA_HOME:-/usr/local/cuda}
-echo "✓ Set CUDA_HOME=$CUDA_HOME for flash-attn build"
+# Install flash-attn (MUST HAVE for optimal performance)
+echo "🚀 Installing flash-attn (MUST HAVE for optimal performance)..."
+
+# Detect CUDA Toolkit installation
+echo "🔍 Checking CUDA Toolkit installation..."
+if command -v nvcc >/dev/null 2>&1; then
+    CUDA_HOME=$(dirname $(dirname $(which nvcc)))
+    echo "✅ CUDA Toolkit found at: $CUDA_HOME"
+    export CUDA_HOME
+else
+    echo "❌ CUDA Toolkit not found. Installing CUDA 12.1 (compatible with flash-attn)..."
+
+    # Install CUDA Toolkit 12.1 (compatible with most flash-attn versions)
+    wget https://developer.download.nvidia.com/compute/cuda/12.1.0/local_installers/cuda_12.1.0_530.30.02_linux.run
+    chmod +x cuda_12.1.0_530.30.02_linux.run
+    sudo ./cuda_12.1.0_530.30.02_linux.run --silent --toolkit --override
+
+    export CUDA_HOME=/usr/local/cuda-12.1
+    export PATH=$CUDA_HOME/bin:$PATH
+    export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
+
+    echo "✅ CUDA Toolkit 12.1 installed at: $CUDA_HOME"
+fi
 
 # Install wheel first (required for flash-attn build but not declared as dependency)
 uv pip install wheel
 echo "Installing flash-attn with CUDA support..."
+
+# Install flash-attn with CUDA Toolkit - NO FALLBACKS, NO PRE-BUILT WHEELS
 uv pip install flash-attn --no-build-isolation
 
 # Download DeepSeek OCR model
