@@ -114,9 +114,9 @@ project/
 3. ✅ **Setup Project Structure** - All directories and key files created
 4. ✅ **API Contract Definition** - Standardized request/response formats in `shared/api_contract.py`
 
-### **Phase 1: Backend Isolation & GPU Assignment** 🟡 **ALMOST COMPLETE**
-1. 🟡 **DeepSeek Backend** - Implementation mostly complete, needs configuration fixes
-2. ⚪ **Mineru Backend** - Basic structure created, needs implementation
+### **Phase 1: Backend Isolation & GPU Assignment** ✅ **COMPLETED**
+1. ✅ **DeepSeek Backend** - Implementation complete with GPU 0 isolation
+2. ✅ **Mineru Backend** - Implementation complete with GPU 1 isolation and Mineru API integration
 3. ✅ **Environment Setup** - Separate venv setup scripts created for each backend
 4. ✅ **GPU Configuration** - CUDA_VISIBLE_DEVICES isolation implemented
 5. ✅ **Deployment System** - Complete deployment scripts with setup automation
