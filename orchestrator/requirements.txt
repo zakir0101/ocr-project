@@ -1,3 +1,17 @@
 # Orchestrator dependencies
-# This file will contain orchestrator-specific dependencies
-# TODO: Add actual orchestrator dependencies
+# These are the dependencies needed for the orchestrator server
+
+# Web framework and API
+flask
+flask-cors
+
+# HTTP client for backend communication
+requests
+
+# Image processing utilities
+Pillow
+numpy
+opencv-python
+
+# Note: Shared dependencies are installed from the main requirements.txt
+# These are orchestrator-specific packages needed for routing and monitoring
