@@ -22,34 +22,30 @@ source ../backends/deepseek-ocr/venv/bin/activate
 echo "📦 Installing DeepSeek dependencies..."
 pip install --upgrade pip
 
-# Install uv for better dependency management
-echo "Installing uv for package management..."
-pip install uv
-
-# Install vLLM with automatic PyTorch backend selection (recommended approach)
-echo "Installing vLLM with automatic PyTorch backend selection..."
-uv pip install vllm==0.8.5 --torch-backend=auto
+# Install vLLM with PyTorch compatibility (use pip for pre-built wheels)
+echo "Installing vLLM with PyTorch compatibility..."
+pip install --timeout 600 vllm==0.8.5
 
 # Force correct NumPy version (required by DeepSeek-OCR)
 echo "Installing NumPy 1.26.4 (required version)..."
-uv pip install numpy==1.26.4
+pip install --force-reinstall numpy==1.26.4
 
 # Install required packages from official DeepSeek-OCR requirements
 echo "Installing required packages from official requirements..."
-uv pip install transformers==4.46.3 tokenizers==0.20.3
-uv pip install PyMuPDF img2pdf einops easydict addict Pillow
+pip install transformers==4.46.3 tokenizers==0.20.3
+pip install PyMuPDF img2pdf einops easydict addict Pillow
 
 # Install server dependencies
 echo "Installing server dependencies..."
-uv pip install flask flask-cors
+pip install flask flask-cors
 
 # Install optional packages (may fail on some systems)
 echo "Installing optional packages..."
-uv pip install matplotlib || echo "⚠ matplotlib installation failed (optional)"
+pip install matplotlib || echo "⚠ matplotlib installation failed (optional)"
 
 # Try flash-attn (optional, may fail without CUDA_HOME)
 echo "Attempting to install flash-attn (optional)..."
-uv pip install flash-attn --no-build-isolation || echo "⚠ Flash attention optional, continuing without it..."
+pip install flash-attn --no-build-isolation || echo "⚠ Flash attention optional, continuing without it..."
 
 # Download DeepSeek OCR model
 echo "📥 Downloading DeepSeek OCR model..."
