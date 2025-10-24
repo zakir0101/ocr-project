@@ -47,12 +47,16 @@ uv pip install flask flask-cors
 echo "Installing optional packages..."
 uv pip install matplotlib || echo "⚠ matplotlib installation failed (optional)"
 
-# Try flash-attn (optional, may fail without CUDA_HOME)
-echo "Attempting to install flash-attn (optional)..."
+# Install flash-attn (required for optimal performance)
+echo "Installing flash-attn (required for optimal performance)..."
+# Set CUDA_HOME environment variable if not already set
+export CUDA_HOME=${CUDA_HOME:-/usr/local/cuda}
+echo "✓ Set CUDA_HOME=$CUDA_HOME for flash-attn build"
+
 # Install wheel first (required for flash-attn build but not declared as dependency)
 uv pip install wheel
-echo "Installing flash-attn with wheel support..."
-uv pip install flash-attn --no-build-isolation || echo "⚠ Flash attention optional, continuing without it..."
+echo "Installing flash-attn with CUDA support..."
+uv pip install flash-attn --no-build-isolation
 
 # Download DeepSeek OCR model
 echo "📥 Downloading DeepSeek OCR model..."
