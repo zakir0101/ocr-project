@@ -1,3 +1,11 @@
 # DeepSeek OCR backend dependencies
-# This file will contain DeepSeek-specific dependencies
-# TODO: Add actual DeepSeek OCR dependencies
+# These are additional dependencies specific to DeepSeek OCR
+
+# DeepSeek OCR specific dependencies
+transformers==4.46.3
+tokenizers==0.20.3
+
+# vLLM configuration for DeepSeek
+vllm==0.8.5
+
+# Note: Shared dependencies are installed from the main requirements.txt

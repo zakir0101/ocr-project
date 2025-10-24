@@ -1,3 +1,12 @@
 # Mineru backend dependencies
-# This file will contain Mineru-specific dependencies
-# TODO: Add actual Mineru dependencies
+# These are additional dependencies specific to Mineru
+
+# Mineru core package with all features except vllm acceleration
+mineru[core]
+
+# Additional dependencies used by Mineru
+loguru
+pypdfium2
+
+# Note: Shared dependencies are installed from the main requirements.txt
+# These are Mineru-specific packages needed for the backend
