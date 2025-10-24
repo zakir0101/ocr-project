@@ -20,15 +20,30 @@ pip install -r ../requirements.txt
 
 # Run DeepSeek backend setup
 echo "🔧 Setting up DeepSeek backend..."
-./setup_deepseek.sh
+if ./setup_deepseek.sh; then
+    echo "✅ DeepSeek backend setup completed"
+else
+    echo "❌ DeepSeek backend setup failed"
+    exit 1
+fi
 
 # Run Mineru backend setup
 echo "🔧 Setting up Mineru backend..."
-./setup_mineru.sh
+if ./setup_mineru.sh; then
+    echo "✅ Mineru backend setup completed"
+else
+    echo "❌ Mineru backend setup failed"
+    exit 1
+fi
 
 # Run orchestrator setup
 echo "🔧 Setting up orchestrator..."
-./setup_orchestrator.sh
+if ./setup_orchestrator.sh; then
+    echo "✅ Orchestrator setup completed"
+else
+    echo "❌ Orchestrator setup failed"
+    exit 1
+fi
 
 echo ""
 echo "✅ Setup completed successfully!"

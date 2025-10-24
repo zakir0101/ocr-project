@@ -8,7 +8,10 @@ COMMIT_MESSAGE=""
 SERVER_ADDRESS=""
 SSH_PORT="22"
 PROJECT_DIR="/home/zakir/ocr-project"
-LOCAL_PORTS="8080:localhost:8080 5000:localhost:5000 5001:localhost:5001"
+# Define port forwarding rules as separate variables for SSH
+LOCAL_PORT_8080="8080:localhost:8080"
+LOCAL_PORT_5000="5000:localhost:5000"
+LOCAL_PORT_5001="5001:localhost:5001"
 
 # Parse command line arguments
 while getopts "m:s:p:d:" opt; do
@@ -29,8 +32,9 @@ while getopts "m:s:p:d:" opt; do
       echo "Usage: $0 [-m \"commit message\"] [-s server_address] [-p ssh_port] [-d project_directory]"
       echo ""
       echo "Examples:"
-      echo "  ./deploy.sh -m \"Update OCR system\" -s zakir@223.166.245.194 -p 40032"
-      echo "  ./deploy.sh -s root@192.168.1.100 -d /home/root/ocr-project"
+      echo "  ./deploy.sh -m \"Update OCR system\" -s zakir@192.168.1.100 -p 40032"
+      echo "  ./deploy.sh -s root@10.0.1.50 -d /opt/ocr-project"
+      echo "  ./deploy.sh -m \"Quick update\"  # Uses defaults"
       echo ""
       echo "Default values:"
       echo "  SSH Port: $SSH_PORT"
@@ -80,11 +84,14 @@ echo "============================="
 echo "Server: $SERVER_ADDRESS"
 echo "SSH Port: $SSH_PORT"
 echo "Project Directory: $PROJECT_DIR"
-echo "Local Port Forwarding: $LOCAL_PORTS"
+echo "Local Port Forwarding:"
+echo "   - $LOCAL_PORT_8080"
+echo "   - $LOCAL_PORT_5000"
+echo "   - $LOCAL_PORT_5001"
 echo ""
 
 # SSH into server and deploy with port forwarding
-ssh -p "$SSH_PORT" "$SERVER_ADDRESS" -L "$LOCAL_PORTS" << 'EOF'
+ssh -p "$SSH_PORT" "$SERVER_ADDRESS" -L "$LOCAL_PORT_8080" -L "$LOCAL_PORT_5000" -L "$LOCAL_PORT_5001" << 'EOF'
     echo "🛑 Stopping current servers..."
     pkill -9 python3 || true
 
@@ -97,7 +104,12 @@ ssh -p "$SSH_PORT" "$SERVER_ADDRESS" -L "$LOCAL_PORTS" << 'EOF'
 
     echo "🔧 Running setup scripts..."
     cd deployment
-    ./setup.sh
+    if ./setup.sh; then
+        echo "✅ Setup completed successfully"
+    else
+        echo "❌ Setup script failed. Check logs and run manually: ./setup.sh"
+        exit 1
+    fi
 
     echo "🚀 Starting all servers..."
     cd ..

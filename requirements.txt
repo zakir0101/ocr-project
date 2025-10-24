@@ -9,7 +9,7 @@ numpy==1.24.3
 requests==2.31.0
 
 # GPU/ML dependencies
-torch==2.1.0
+torch==2.3.0
 vllm==0.8.5
 
 # Image processing
