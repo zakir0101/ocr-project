@@ -42,9 +42,18 @@ This document provides essential information for Claude assistants to effectivel
 ### **Standard Deployment Process**
 
 #### **1. Full Deployment (Recommended)**
+
+CURRENT_SSH_SERVER_ADDRESS="root@115.231.176.132" 
+CURRENT_SSH_SERVER_PORT="51498"
+
 ```bash
-# Deploy all changes to server
-./deployment/deploy.sh -m "Your descriptive commit message"
+# Deploy all changes to server with configurable parameters
+./deployment/deploy.sh -m "Your descriptive commit message" -s server_address -p ssh_port -d project_directory
+
+# Examples:
+./deployment/deploy.sh -m "Update OCR system" -s zakir@192.168.1.100 -p 40032
+./deployment/deploy.sh -m "Quick update" -s root@10.0.1.50 -d /opt/ocr-project
+./deployment/deploy.sh -m "Standard deployment"  # Uses defaults
 ```
 
 #### **2. Manual Deployment (if script fails)**
@@ -54,12 +63,12 @@ git add .
 git commit -m "Your changes"
 git push origin master
 
-# SSH to server with port forwarding
-ssh -p 40032 zakir@223.166.245.194 -L 8080:localhost:8080 -L 5000:localhost:5000 -L 5001:localhost:5001
+# SSH to server with port forwarding (replace with your server details)
+ssh -p SSH_PORT SERVER_ADDRESS -L 8080:localhost:8080 -L 5000:localhost:5000 -L 5001:localhost:5001
 
 # Deploy on server
 pkill -9 python3
-cd /home/zakir/ocr-project
+cd PROJECT_DIRECTORY
 git fetch origin && git reset --hard origin/master
 cd deployment
 ./setup.sh
@@ -68,13 +77,13 @@ cd deployment
 
 #### **3. Quick Restart (if services already running)**
 ```bash
-# SSH to server
-ssh -p 40032 zakir@223.166.245.194
+# SSH to server (replace with your server details)
+ssh -p SSH_PORT SERVER_ADDRESS
 
 # Restart services only
 pkill -9 python3
-cd /home/zakir/ocr-project/deployment
-./startup.sh
+cd PROJECT_DIRECTORY/deployment
+./startup.sh [optional_project_root]
 ```
 
 ### **Comprehensive Testing Procedures**
@@ -346,9 +355,9 @@ curl http://localhost:8080/backends  # All backend status
 - **Symptom**: `deploy.sh` fails at SSH step
 - **Solution**:
   ```bash
-  # Manual deployment
+  # Manual deployment with correct server parameters
   git add . && git commit -m "fix" && git push
-  ssh -p 40032 zakir@223.166.245.194
+  ssh -p SSH_PORT SERVER_ADDRESS -L 8080:localhost:8080 -L 5000:localhost:5000 -L 5001:localhost:5001
   # Then run manual deployment commands
   ```
 
@@ -373,9 +382,9 @@ curl http://localhost:8080/backends  # All backend status
 ## 🚨 Emergency Procedures
 
 ### **Server Crash Recovery:**
-1. SSH to server: `ssh -p 40032 zakir@223.166.245.194`
+1. SSH to server: `ssh -p SSH_PORT SERVER_ADDRESS`
 2. Kill old processes: `pkill -9 python3`
-3. Navigate to project: `cd /home/zakir/ocr-project`
+3. Navigate to project: `cd PROJECT_DIRECTORY`
 4. Start services: `cd deployment && ./startup.sh`
 
 ### **Deployment Issues:**
@@ -397,18 +406,40 @@ When making significant changes:
 **Last Updated**: 2025-10-25
 **Current Status**: ✅ **PROJECT COMPLETE** - All phases successfully implemented
 **Known Issues**: None - All components implemented and tested
-**Deployment Method**: `./deployment/deploy.sh`
+**Deployment Method**: `./deployment/deploy.sh` (configurable server parameters)
 **Testing Methods**: Comprehensive test scripts for health, images, PDFs, and system integration
-**Ready for Production**: Yes - Complete multi-backend OCR system
+**Ready for Production**: Yes - Complete multi-backend OCR system with flexible deployment
 
 ### **Deployment System Summary**
 
 #### **Key Deployment Scripts:**
-- `deploy.sh` - Full automated deployment with git commit/push
+- `deploy.sh` - Full automated deployment with git commit/push and SSH tunneling
 - `setup.sh` - Main setup orchestrator for all components
 - `startup.sh` - Service startup script for all three servers
 - `setup_*.sh` - Individual backend setup scripts
 - `test_*.sh` - Comprehensive testing scripts
+
+#### **Configurable Deployment Parameters:**
+- **Server Address** (`-s`): Configurable server address (e.g., `zakir@192.168.1.100`)
+- **SSH Port** (`-p`): Configurable SSH port (default: `22`)
+- **Project Directory** (`-d`): Configurable project directory (default: `/home/zakir/ocr-project`)
+- **Commit Message** (`-m`): Optional commit message for git
+- **SSH Tunneling**: Automatic port forwarding for 8080, 5000, 5001
+
+#### **Usage Examples:**
+```bash
+# Full deployment with custom server
+./deploy.sh -m "Update OCR system" -s zakir@192.168.1.100 -p 40032
+
+# Deployment with custom project directory
+./deploy.sh -s root@10.0.1.50 -d /opt/ocr-project
+
+# Quick deployment (uses defaults)
+./deploy.sh -m "Quick update"
+
+# Start services with custom project root
+./startup.sh /home/custom/ocr-project
+```
 
 #### **Service Architecture:**
 - **Orchestrator**: Port 8080 (main entry point)
@@ -426,3 +457,10 @@ When making significant changes:
 - never ever run this code locally .. later on we will test and run it on the server
 - never ever run this code locally .. later on we will test and run it on the server
 do you understand me !!
+
+
+
+
+
+CURRENT_SSH_SERVER_ADDRESS="root@115.231.176.132" 
+CURRENT_SSH_SERVER_PORT="51498"

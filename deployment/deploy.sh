@@ -1,23 +1,52 @@
 #!/bin/bash
 
 # Multi-backend OCR Deployment Script
-# This script deploys the updated code to the Vast.ai server for all components
-# Usage: ./deploy.sh [-m "commit message"]
+# This script deploys the updated code to the server for all components
+# Usage: ./deploy.sh [-m "commit message"] [-s server_address] [-p ssh_port] [-d project_directory]
 
 COMMIT_MESSAGE=""
+SERVER_ADDRESS=""
+SSH_PORT="22"
+PROJECT_DIR="/home/zakir/ocr-project"
+LOCAL_PORTS="8080:localhost:8080 5000:localhost:5000 5001:localhost:5001"
 
 # Parse command line arguments
-while getopts "m:" opt; do
+while getopts "m:s:p:d:" opt; do
   case $opt in
     m)
       COMMIT_MESSAGE="$OPTARG"
       ;;
+    s)
+      SERVER_ADDRESS="$OPTARG"
+      ;;
+    p)
+      SSH_PORT="$OPTARG"
+      ;;
+    d)
+      PROJECT_DIR="$OPTARG"
+      ;;
     \?)
-      echo "Usage: $0 [-m \"commit message\"]"
+      echo "Usage: $0 [-m \"commit message\"] [-s server_address] [-p ssh_port] [-d project_directory]"
+      echo ""
+      echo "Examples:"
+      echo "  ./deploy.sh -m \"Update OCR system\" -s zakir@223.166.245.194 -p 40032"
+      echo "  ./deploy.sh -s root@192.168.1.100 -d /home/root/ocr-project"
+      echo ""
+      echo "Default values:"
+      echo "  SSH Port: $SSH_PORT"
+      echo "  Project Directory: $PROJECT_DIR"
       exit 1
       ;;
   esac
 done
+
+# Validate required arguments
+if [ -z "$SERVER_ADDRESS" ]; then
+    echo "❌ Error: Server address (-s) is required"
+    echo ""
+    echo "Usage: $0 [-m \"commit message\"] [-s server_address] [-p ssh_port] [-d project_directory]"
+    exit 1
+fi
 
 echo "🚀 Starting Multi-backend OCR deployment..."
 
@@ -48,14 +77,19 @@ fi
 echo ""
 echo "🔗 Deploying to server..."
 echo "============================="
+echo "Server: $SERVER_ADDRESS"
+echo "SSH Port: $SSH_PORT"
+echo "Project Directory: $PROJECT_DIR"
+echo "Local Port Forwarding: $LOCAL_PORTS"
+echo ""
 
-# SSH into server and deploy
-ssh -p 40032 zakir@223.166.245.194 << 'EOF'
+# SSH into server and deploy with port forwarding
+ssh -p "$SSH_PORT" "$SERVER_ADDRESS" -L "$LOCAL_PORTS" << 'EOF'
     echo "🛑 Stopping current servers..."
-    pkill -9 python3
+    pkill -9 python3 || true
 
     echo "📁 Navigating to project..."
-    cd /home/zakir/deepseek-ocr-kaggle
+    cd "$PROJECT_DIR"
 
     echo "⬇️ Pulling latest changes..."
     git fetch origin
