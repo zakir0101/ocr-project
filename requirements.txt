@@ -1,19 +1,13 @@
 # Multi-backend OCR System - Shared Dependencies
-# This file contains dependencies shared across all components
+# This file contains ONLY truly shared dependencies
+# Backend-specific dependencies are handled in their own setup scripts
 
-# Core dependencies
+# Core dependencies (minimal shared set)
 flask==2.3.3
 flask-cors==4.0.0
 Pillow==10.0.1
 numpy==1.24.3
 requests==2.31.0
-
-# GPU/ML dependencies
-torch==2.3.0
-vllm==0.8.5
-
-# Image processing
-opencv-python==4.8.1.78
 
 # PDF processing
 PyMuPDF==1.23.8
@@ -23,3 +17,6 @@ img2pdf==0.4.4
 einops==0.7.0
 easydict==1.10
 addict==2.4.0
+
+# NOTE: GPU/ML dependencies (torch, vllm) are handled by each backend
+# to avoid version conflicts and ensure proper GPU compatibility

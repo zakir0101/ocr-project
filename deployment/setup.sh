@@ -8,15 +8,13 @@ set -e  # Exit on any error
 echo "🚀 Starting Multi-backend OCR System Setup..."
 echo "=============================================="
 
-# Create main virtual environment
-echo "📦 Creating main virtual environment..."
-python3 -m venv venv
-source venv/bin/activate
+# NO MAIN VIRTUAL ENVIRONMENT - Each backend handles its own dependencies
+# This prevents dependency conflicts between components
 
-# Install shared dependencies
-echo "📦 Installing shared dependencies..."
-pip install --upgrade pip
-pip install -r ../requirements.txt
+echo "📋 Setup Architecture:"
+echo "   - Each backend uses its own isolated virtual environment"
+echo "   - No shared dependencies to avoid conflicts"
+echo "   - Backends handle their own dependency management"
 
 # Run DeepSeek backend setup
 echo "🔧 Setting up DeepSeek backend..."
