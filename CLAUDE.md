@@ -37,21 +37,24 @@ This document provides essential information for Claude assistants to effectivel
 
 ### **🎉 PROJECT COMPLETE - All phases successfully implemented!**
 
-## 🚀 Quick Deployment Commands
+## 🚀 Deployment & Testing Guide
 
-### Standard Deployment
+### **Standard Deployment Process**
+
+#### **1. Full Deployment (Recommended)**
 ```bash
+# Deploy all changes to server
 ./deployment/deploy.sh -m "Your descriptive commit message"
 ```
 
-### Manual Deployment (if script fails)
+#### **2. Manual Deployment (if script fails)**
 ```bash
-# Commit and push
+# Commit and push changes
 git add .
 git commit -m "Your changes"
 git push origin master
 
-# SSH to server
+# SSH to server with port forwarding
 ssh -p 40032 zakir@223.166.245.194 -L 8080:localhost:8080 -L 5000:localhost:5000 -L 5001:localhost:5001
 
 # Deploy on server
@@ -61,6 +64,105 @@ git fetch origin && git reset --hard origin/master
 cd deployment
 ./setup.sh
 ./startup.sh
+```
+
+#### **3. Quick Restart (if services already running)**
+```bash
+# SSH to server
+ssh -p 40032 zakir@223.166.245.194
+
+# Restart services only
+pkill -9 python3
+cd /home/zakir/ocr-project/deployment
+./startup.sh
+```
+
+### **Comprehensive Testing Procedures**
+
+#### **1. Health & Model Loading Test**
+```bash
+# Test all servers and model loading
+./deployment/test_server_health.sh
+```
+**Expected Output:**
+- All servers responding (✅)
+- Models loaded into GPU memory (✅)
+- GPU resources available (✅)
+
+#### **2. Image OCR Endpoint Test**
+```bash
+# Test image processing for both backends
+./deployment/test_image_endpoints.sh
+```
+**Tests:**
+- Direct backend endpoints (5000, 5001)
+- Orchestrator routing (8080)
+- Backend selection functionality
+- Unified response format
+
+#### **3. PDF OCR Endpoint Test**
+```bash
+# Test PDF processing for both backends
+./deployment/test_pdf_endpoints.sh
+```
+**Tests:**
+- Multi-page PDF processing
+- Backend-specific PDF handling
+- Orchestrator routing with PDFs
+- Unified response format
+
+#### **4. System Integration Test**
+```bash
+# Run comprehensive system test
+./deployment/test_system.sh
+```
+**Tests:**
+- All endpoints and routing
+- Health monitoring
+- Error handling
+- Performance metrics
+
+#### **5. Web Client Test**
+```bash
+# Test web client functionality
+./deployment/test_phase3_web_client.sh
+```
+**Tests:**
+- Frontend backend selection
+- Comparison view
+- File upload and preview
+- Real-time status updates
+
+### **Individual Component Testing**
+
+#### **Quick Health Checks**
+```bash
+# Orchestrator health
+curl http://localhost:8080/health
+
+# DeepSeek backend health
+curl http://localhost:5000/health
+
+# Mineru backend health
+curl http://localhost:5001/health
+```
+
+#### **Backend Information**
+```bash
+# List available backends with status
+curl http://localhost:8080/backends
+```
+
+#### **Manual OCR Testing**
+```bash
+# Test image OCR with DeepSeek
+curl -X POST -F "image=@test_image.png" -F "backend=deepseek-ocr" http://localhost:8080/ocr/image
+
+# Test PDF OCR with Mineru
+curl -X POST -F "pdf=@test_document.pdf" -F "backend=mineru" http://localhost:8080/ocr/pdf
+
+# Test with page selection (PDF only)
+curl -X POST -F "pdf=@test_document.pdf" -F "backend=deepseek-ocr" -F "pages=[1,2]" http://localhost:8080/ocr/pdf
 ```
 
 ## 📁 Current Project Structure
@@ -113,14 +215,21 @@ ocr-project/
 7. ✅ **Health Monitoring** - Real-time backend status tracking
 8. ✅ **Deployment System** - Complete automation scripts
 
-### **Testing Commands:**
+### **Quick Testing Commands:**
 ```bash
-# Test individual backends
-curl http://localhost:5000/health  # DeepSeek
-curl http://localhost:5001/health  # Mineru
+# Basic health checks
+curl http://localhost:8080/health    # Orchestrator
+curl http://localhost:5000/health    # DeepSeek
+curl http://localhost:5001/health    # Mineru
 
-# Test orchestrator (when implemented)
-curl http://localhost:8080/health
+# Backend information
+curl http://localhost:8080/backends  # All backend status
+
+# Comprehensive testing
+./deployment/test_server_health.sh    # Health & models
+./deployment/test_image_endpoints.sh  # Image OCR
+./deployment/test_pdf_endpoints.sh    # PDF OCR
+./deployment/test_system.sh           # Full system
 ```
 
 ## 🛠️ Development Guidelines
@@ -177,23 +286,89 @@ curl http://localhost:8080/health
 }
 ```
 
-## 🔍 Common Issues & Solutions
+## 🔍 Deployment Issues & Solutions
 
-### **GPU Memory Issues:**
+### **Setup & Installation Issues**
+
+#### **DeepSeek Model Download Failures:**
+- **Symptom**: HuggingFace download fails or times out
+- **Solution**:
+  ```bash
+  # Manual download with retry
+  cd deployment
+  ./setup_deepseek.sh
+  # If fails, run individual commands from the script
+  ```
+
+#### **Mineru Package Installation Issues:**
+- **Symptom**: `uv pip install` fails or hangs
+- **Solution**:
+  ```bash
+  # Use standard pip instead
+  pip install mineru[core]
+  # Or install individual components
+  pip install mineru flask flask-cors Pillow
+  ```
+
+#### **Virtual Environment Issues:**
+- **Symptom**: Python packages not found in venv
+- **Solution**:
+  ```bash
+  # Recreate virtual environments
+  cd deployment
+  rm -rf ../backends/deepseek-ocr/venv
+  rm -rf ../backends/mineru/venv
+  rm -rf ../orchestrator/venv
+  ./setup.sh
+  ```
+
+### **Runtime Issues**
+
+#### **GPU Memory Issues:**
 - **Symptom**: Model loading fails with CUDA out of memory
 - **Solution**: Ensure `CUDA_VISIBLE_DEVICES` is set correctly (0 for DeepSeek, 1 for Mineru)
 
-### **Import Errors:**
+#### **Import Errors:**
 - **Symptom**: Missing modules when starting servers
 - **Solution**: Run `deployment/setup.sh` to install all dependencies
 
-### **Port Conflicts:**
+#### **Port Conflicts:**
 - **Symptom**: "Address already in use" errors
 - **Solution**: Kill existing processes with `pkill -9 python3`
 
-### **Model Loading Failures:**
+#### **Model Loading Failures:**
 - **Symptom**: `model_loaded: false` in health response
 - **Solution**: Check model files exist in `models/deepseek-ocr/` and `models/mineru/`
+
+### **Deployment Script Issues**
+
+#### **SSH Connection Failures:**
+- **Symptom**: `deploy.sh` fails at SSH step
+- **Solution**:
+  ```bash
+  # Manual deployment
+  git add . && git commit -m "fix" && git push
+  ssh -p 40032 zakir@223.166.245.194
+  # Then run manual deployment commands
+  ```
+
+#### **Git Reset Issues:**
+- **Symptom**: `git reset --hard` fails
+- **Solution**:
+  ```bash
+  # Force reset
+  git fetch origin
+  git reset --hard origin/master --force
+  ```
+
+#### **Service Startup Order:**
+- **Symptom**: Backends start before dependencies are ready
+- **Solution**:
+  ```bash
+  # Add delays in startup.sh
+  sleep 10  # Wait for orchestrator
+  # Start backends sequentially
+  ```
 
 ## 🚨 Emergency Procedures
 
@@ -219,11 +394,35 @@ When making significant changes:
 
 ---
 
-**Last Updated**: 2025-10-24
+**Last Updated**: 2025-10-25
 **Current Status**: ✅ **PROJECT COMPLETE** - All phases successfully implemented
 **Known Issues**: None - All components implemented and tested
 **Deployment Method**: `./deployment/deploy.sh`
+**Testing Methods**: Comprehensive test scripts for health, images, PDFs, and system integration
 **Ready for Production**: Yes - Complete multi-backend OCR system
+
+### **Deployment System Summary**
+
+#### **Key Deployment Scripts:**
+- `deploy.sh` - Full automated deployment with git commit/push
+- `setup.sh` - Main setup orchestrator for all components
+- `startup.sh` - Service startup script for all three servers
+- `setup_*.sh` - Individual backend setup scripts
+- `test_*.sh` - Comprehensive testing scripts
+
+#### **Service Architecture:**
+- **Orchestrator**: Port 8080 (main entry point)
+- **DeepSeek**: Port 5000 (GPU 0)
+- **Mineru**: Port 5001 (GPU 1)
+
+#### **Testing Coverage:**
+- ✅ Server health and model loading
+- ✅ Image OCR endpoints
+- ✅ PDF OCR endpoints (multi-page)
+- ✅ System integration
+- ✅ Web client functionality
+- ✅ Backend selection and routing
+
 - never ever run this code locally .. later on we will test and run it on the server
 - never ever run this code locally .. later on we will test and run it on the server
 do you understand me !!
