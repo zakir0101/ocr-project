@@ -307,10 +307,11 @@ class DeepSeekOCRBackend(OCRBackend):
             with ThreadPoolExecutor(max_workers=min(len(images), 4)) as executor:
                 # Prepare batch inputs
                 for image in images:
+                    from process.image_process import DeepseekOCRProcessor
                     cache_item = {
                         "prompt": DEEPSEEK_PROMPT,
                         "multi_modal_data": {
-                            "image": self.processor.tokenize_with_images(
+                            "image": DeepseekOCRProcessor().tokenize_with_images(
                                 images=[image], bos=True, eos=True, cropping=CROP_MODE
                             )
                         },
@@ -318,9 +319,17 @@ class DeepSeekOCRBackend(OCRBackend):
                     batch_inputs.append(cache_item)
 
             # Generate OCR results for all pages
+            from vllm import SamplingParams
+            from process.ngram_norepeat import NoRepeatNGramLogitsProcessor
+            sampling_params = SamplingParams(
+                temperature=0.1,
+                top_p=0.9,
+                max_tokens=4096,
+                logits_processors=[NoRepeatNGramLogitsProcessor(ngram_size=3)]
+            )
             outputs_list = self.engine.generate(
                 batch_inputs,
-                sampling_params=self.sampling_params
+                sampling_params=sampling_params
             )
 
             # Combine results from all pages
@@ -368,7 +377,6 @@ class DeepSeekOCRBackend(OCRBackend):
                 print(f"Warning: Error during engine cleanup: {e}")
 
         self.engine = None
-        self.processor = None
         self.model_loaded = False
         print("DeepSeek backend resources cleaned up")
 
@@ -390,13 +398,14 @@ class DeepSeekOCRBackend(OCRBackend):
             """Async generation function from reference implementation"""
             from vllm import SamplingParams
             from process.ngram_norepeat import NoRepeatNGramLogitsProcessor
+            from process.image_process import DeepseekOCRProcessor
 
             # Prepare image for processing
             image_path = "/tmp/temp_image.png"
             image.save(image_path)
 
             # Process image using DeepSeek OCR processor - EXACTLY like reference
-            image_features = self.processor.tokenize_with_images(
+            image_features = DeepseekOCRProcessor().tokenize_with_images(
                 images=[image],
                 bos=True,
                 eos=True,
@@ -414,7 +423,6 @@ class DeepSeekOCRBackend(OCRBackend):
                 temperature=0.1,
                 top_p=0.9,
                 max_tokens=4096,
-                stop_token_ids=[self.processor.tokenizer.eos_token_id],
                 logits_processors=[NoRepeatNGramLogitsProcessor(ngram_size=3)]
             )
 
