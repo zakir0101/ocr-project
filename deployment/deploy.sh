@@ -102,17 +102,7 @@ ssh -p "$SSH_PORT" "$SERVER_ADDRESS" -L "$LOCAL_PORT_8080" -L "$LOCAL_PORT_5000"
     git fetch origin
     git reset --hard origin/master
 
-    echo "🔧 Running setup scripts..."
-    cd deployment || { echo "❌ Failed to navigate to deployment directory"; exit 1; }
-    if ./setup.sh; then
-        echo "✅ Setup completed successfully"
-    else
-        echo "❌ Setup script failed. Check logs and run manually: ./setup.sh"
-        exit 1
-    fi
-
     echo "🚀 Starting all servers..."
-    cd ..
 
     # Start orchestrator
     cd orchestrator
