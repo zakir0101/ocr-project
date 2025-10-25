@@ -101,50 +101,34 @@ echo "Installing flash-attn with CUDA support..."
 # Install flash-attn with CUDA Toolkit - NO FALLBACKS, NO PRE-BUILT WHEELS
 uv pip install flash-attn --no-build-isolation
 
-# Download DeepSeek OCR model with parallel downloads and progress tracking
-echo "📥 Downloading DeepSeek OCR model (parallel download with progress)..."
+# Download DeepSeek OCR model using simple approach (avoids UI freezing)
+echo "📥 Downloading DeepSeek OCR model..."
 MODEL_DIR="../models/deepseek-ocr"
 mkdir -p "$MODEL_DIR"
 
-# Download using huggingface_hub with detailed progress tracking
-echo "Downloading model from HuggingFace with progress tracking..."
-
-# Use Python script with detailed progress tracking
-python3 -c "
+# Check if model already exists (avoid re-downloading)
+echo "🔍 Checking if model already exists..."
+if [ -f "$MODEL_DIR/model.safetensors" ] && [ -f "$MODEL_DIR/config.json" ]; then
+    echo "✅ Model already exists, skipping download"
+else
+    # Use simple subprocess approach (reference implementation method)
+    echo "🚀 Starting model download..."
+    python3 -c "
+from huggingface_hub import snapshot_download
 import os
-import time
-from huggingface_hub import snapshot_download, list_repo_files
-from huggingface_hub.utils import tqdm
 
 MODEL_DIR = '$MODEL_DIR'
 REPO_ID = 'deepseek-ai/DeepSeek-OCR'
 
-# Get list of files to download
-print('📋 Getting file list...')
-files = list_repo_files(REPO_ID)
-print(f'📁 Found {len(files)} files to download')
-
-# Track downloaded files
-downloaded_files = []
-
-def progress_callback(downloaded, total):
-    if total > 0:
-        percentage = (downloaded / total) * 100
-        print(f'📥 Progress: {downloaded}/{total} files ({percentage:.1f}%)', end='\r')
-
-# Download with progress tracking
-print('🚀 Starting download...')
+print('Downloading model files...')
 snapshot_download(
     repo_id=REPO_ID,
     local_dir=MODEL_DIR,
-    force_download=False,
-    max_workers=4
+    force_download=False
 )
-
-print('')
-print('✅ Model download completed successfully!')
-print(f'📦 Downloaded {len(files)} files to {MODEL_DIR}')
+print('✅ Model download completed!')
 "
+fi
 
 # Verify installations
 echo "Verifying installations..."
