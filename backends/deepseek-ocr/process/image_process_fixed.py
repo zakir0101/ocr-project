@@ -28,6 +28,13 @@ class DeepseekOCRProcessor:
             project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
             model_path = os.path.join(project_root, "models", "deepseek-ocr")
 
+            print(f"Loading processor from: {model_path}")
+
+            # Check if model directory exists
+            if not os.path.exists(model_path):
+                print(f"✗ Model directory does not exist: {model_path}")
+                raise FileNotFoundError(f"Model directory not found: {model_path}")
+
             self.processor = AutoProcessor.from_pretrained(
                 model_path,
                 trust_remote_code=True
