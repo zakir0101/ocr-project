@@ -2,11 +2,6 @@
 
 # DeepSeek Backend Setup Script
 # This script sets up the DeepSeek OCR backend with virtual environment and dependencies
-#
-# IMPORTANT: The DeepSeek-OCR model requires HuggingFace authentication.
-# Set HUGGINGFACE_HUB_TOKEN environment variable before running this script:
-#   export HUGGINGFACE_HUB_TOKEN="your_hf_token_here"
-# Get your token from: https://huggingface.co/settings/tokens
 
 set -e  # Exit on any error
 
@@ -123,28 +118,9 @@ done
 if [ "$MODEL_EXISTS" = true ]; then
     echo "✅ Model already exists with all required files, skipping download"
 else
-    # Download using huggingface_hub with token support
+    # Download using huggingface_hub (exact reference implementation)
     echo "🚀 Downloading DeepSeek OCR model..."
-
-    # Check if HuggingFace token is available
-    if [ -n "$HUGGINGFACE_HUB_TOKEN" ]; then
-        echo "🔑 Using HuggingFace token from environment variable"
-        HUGGINGFACE_HUB_TOKEN="$HUGGINGFACE_HUB_TOKEN" python3 -c "
-import os
-from huggingface_hub import snapshot_download
-token = os.environ.get('HUGGINGFACE_HUB_TOKEN')
-snapshot_download(
-    repo_id='deepseek-ai/DeepSeek-OCR',
-    local_dir='$MODEL_DIR',
-    local_dir_use_symlinks=False,
-    token=token
-)
-"
-    else
-        echo "⚠️  No HuggingFace token found in HUGGINGFACE_HUB_TOKEN environment variable"
-        echo "🔑 Attempting download without token (may fail for gated models)..."
-        python3 -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='deepseek-ai/DeepSeek-OCR', local_dir='$MODEL_DIR', local_dir_use_symlinks=False)"
-    fi
+    python3 -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='deepseek-ai/DeepSeek-OCR', local_dir='$MODEL_DIR', local_dir_use_symlinks=False)"
 fi
 
 # Verify installations
