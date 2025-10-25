@@ -91,19 +91,19 @@ echo "   - $LOCAL_PORT_5001"
 echo ""
 
 # SSH into server and deploy with port forwarding
-ssh -p "$SSH_PORT" "$SERVER_ADDRESS" -L "$LOCAL_PORT_8080" -L "$LOCAL_PORT_5000" -L "$LOCAL_PORT_5001" << 'EOF'
+ssh -p "$SSH_PORT" "$SERVER_ADDRESS" -L "$LOCAL_PORT_8080" -L "$LOCAL_PORT_5000" -L "$LOCAL_PORT_5001" << EOF
     echo "🛑 Stopping current servers..."
     pkill -9 python3 || true
 
     echo "📁 Navigating to project..."
-    cd "$PROJECT_DIR"
+    cd "$PROJECT_DIR" || { echo "❌ Failed to navigate to project directory: $PROJECT_DIR"; exit 1; }
 
     echo "⬇️ Pulling latest changes..."
     git fetch origin
     git reset --hard origin/master
 
     echo "🔧 Running setup scripts..."
-    cd deployment
+    cd deployment || { echo "❌ Failed to navigate to deployment directory"; exit 1; }
     if ./setup.sh; then
         echo "✅ Setup completed successfully"
     else
