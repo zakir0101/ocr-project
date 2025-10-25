@@ -106,22 +106,45 @@ echo "📥 Downloading DeepSeek OCR model (parallel download with progress)..."
 MODEL_DIR="../models/deepseek-ocr"
 mkdir -p "$MODEL_DIR"
 
-# Download using huggingface_hub with parallel downloads and progress tracking
-echo "Downloading model from HuggingFace with parallel downloads..."
+# Download using huggingface_hub with detailed progress tracking
+echo "Downloading model from HuggingFace with progress tracking..."
+
+# Use Python script with detailed progress tracking
 python3 -c "
 import os
-from huggingface_hub import snapshot_download
+import time
+from huggingface_hub import snapshot_download, list_repo_files
+from huggingface_hub.utils import tqdm
 
-# Configure for faster parallel downloads
+MODEL_DIR = '$MODEL_DIR'
+REPO_ID = 'deepseek-ai/DeepSeek-OCR'
+
+# Get list of files to download
+print('📋 Getting file list...')
+files = list_repo_files(REPO_ID)
+print(f'📁 Found {len(files)} files to download')
+
+# Track downloaded files
+downloaded_files = []
+
+def progress_callback(downloaded, total):
+    if total > 0:
+        percentage = (downloaded / total) * 100
+        print(f'📥 Progress: {downloaded}/{total} files ({percentage:.1f}%)', end='\r')
+
+# Download with progress tracking
+print('🚀 Starting download...')
 snapshot_download(
-    repo_id='deepseek-ai/DeepSeek-OCR',
-    local_dir='$MODEL_DIR',
+    repo_id=REPO_ID,
+    local_dir=MODEL_DIR,
     local_dir_use_symlinks=False,
-    resume_download=True,
     force_download=False,
-    max_workers=4  # Parallel downloads
+    max_workers=4
 )
+
+print('')
 print('✅ Model download completed successfully!')
+print(f'📦 Downloaded {len(files)} files to {MODEL_DIR}')
 "
 
 # Verify installations
