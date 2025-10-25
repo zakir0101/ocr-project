@@ -108,8 +108,20 @@ mkdir -p "$MODEL_DIR"
 
 # Check if model already exists (avoid re-downloading)
 echo "🔍 Checking if model already exists..."
-if [ -f "$MODEL_DIR/model.safetensors" ] && [ -f "$MODEL_DIR/config.json" ]; then
-    echo "✅ Model already exists, skipping download"
+REQUIRED_FILES=("model.safetensors" "config.json" "tokenizer.json" "tokenizer_config.json" "vocab.json")
+MODEL_EXISTS=true
+
+for file in "${REQUIRED_FILES[@]}"; do
+    if [ ! -f "$MODEL_DIR/$file" ]; then
+        echo "❌ Missing required file: $file"
+        MODEL_EXISTS=false
+        break
+    fi
+    echo "✅ Found: $file"
+done
+
+if [ "$MODEL_EXISTS" = true ]; then
+    echo "✅ Model already exists with all required files, skipping download"
 else
     # Use simple subprocess approach (reference implementation method)
     echo "🚀 Starting model download..."
