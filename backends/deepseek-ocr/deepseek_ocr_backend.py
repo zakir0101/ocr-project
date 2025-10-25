@@ -47,7 +47,6 @@ class DeepSeekOCRBackend(OCRBackend):
         self.model_path = Path(model_path)
         self.device = device
         self.engine = None
-        self.processor = None
         self.model_loaded = False
         self.gpu_available = False
 
@@ -115,21 +114,8 @@ class DeepSeekOCRBackend(OCRBackend):
 
             self.engine = AsyncLLMEngine.from_engine_args(engine_args)
 
-            # Initialize processor with error handling
-            try:
-                self.processor = DeepseekOCRProcessor()
-                if self.processor is None:
-                    print("✗ DeepseekOCRProcessor() returned None - CRITICAL ERROR")
-                    raise Exception("DeepseekOCRProcessor() returned None")
-
-                # Test if processor has required attributes
-                if not hasattr(self.processor, 'padding_side'):
-                    print("✗ DeepseekOCRProcessor missing 'padding_side' attribute - CRITICAL ERROR")
-                    raise Exception("DeepseekOCRProcessor missing 'padding_side' attribute")
-
-            except Exception as e:
-                print(f"✗ Failed to initialize DeepseekOCRProcessor: {e}")
-                raise
+            # Processor will be created fresh each time like reference implementation
+            print("✓ Processor will be created fresh for each request (like reference)")
 
             self.model_loaded = True
             print("✓ DeepSeek OCR model loaded successfully into GPU 0")
