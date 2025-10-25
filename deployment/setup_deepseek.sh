@@ -26,16 +26,12 @@ pip install --upgrade pip
 echo "Installing uv for package management..."
 pip install uv
 
-# Install compatible PyTorch version first (required for vLLM compatibility)
-echo "Installing compatible PyTorch version..."
-uv pip install torch==2.6.0 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
-
 # Force correct NumPy version (required by DeepSeek-OCR)
 echo "Installing NumPy 1.26.4 (required version)..."
 uv pip install numpy==1.26.4
 
-# Install vLLM with explicit PyTorch compatibility
-echo "Installing vLLM with explicit PyTorch compatibility..."
+# Install vLLM 0.8.5 (official supported version) - let it pull compatible PyTorch
+echo "Installing vLLM 0.8.5 (official supported version)..."
 uv pip install vllm==0.8.5
 
 # Install required packages from official DeepSeek-OCR requirements
