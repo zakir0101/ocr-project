@@ -42,9 +42,9 @@ This document provides essential information for Claude assistants to effectivel
 ### **Standard Deployment Process**
 
 #### **1. Full Deployment (Recommended)**
-
-CURRENT_SSH_SERVER_ADDRESS="root@115.231.176.132" 
-CURRENT_SSH_SERVER_PORT="51498"
+ 
+CURRENT_SSH_SERVER_ADDRESS="zakir@77.104.167.148" 
+CURRENT_SSH_SERVER_PORT="40146"
 
 ```bash
 # Deploy all changes to server with configurable parameters
@@ -462,6 +462,7 @@ do you understand me !!
 
 
 
-CURRENT_SSH_SERVER_ADDRESS="root@115.231.176.132" 
-CURRENT_SSH_SERVER_PORT="51498"
+CURRENT_SSH_SERVER_ADDRESS="zakir@77.104.167.148" 
+CURRENT_SSH_SERVER_PORT="40146"
 - use sleep to wait for long runnign task
+- no .. no wati .. did I not tell you . its forbidden to change could in the server only change code local then add,commit,push

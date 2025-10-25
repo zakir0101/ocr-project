@@ -41,7 +41,7 @@ uv pip install opencv-python || echo "⚠ OpenCV installation failed (optional)"
 
 # Verify installations
 echo "Verifying installations..."
-# python -c "import mineru; print(f'✓ MinerU: {mineru.__version__}')"
+# python -c "import mineru; print(f'✓ MinerU: {mineru.__version__}')" # module mineru has no attribute version
 python -c "import flask; print(f'✓ Flask: {flask.__version__}')"
 python -c "import torch; print(f'✓ PyTorch: {torch.__version__}')"
 
