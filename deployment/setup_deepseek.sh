@@ -101,20 +101,30 @@ echo "Installing flash-attn with CUDA support..."
 # Install flash-attn with CUDA Toolkit - NO FALLBACKS, NO PRE-BUILT WHEELS
 uv pip install flash-attn --no-build-isolation
 
-# Download DeepSeek OCR model
-echo "📥 Downloading DeepSeek OCR model..."
+# Download DeepSeek OCR model with parallel downloads and progress tracking
+echo "📥 Downloading DeepSeek OCR model (parallel download with progress)..."
 MODEL_DIR="../models/deepseek-ocr"
 mkdir -p "$MODEL_DIR"
 
-# Download using huggingface_hub
-echo "Downloading model from HuggingFace..."
+# Download using huggingface_hub with parallel downloads and progress tracking
+echo "Downloading model from HuggingFace with parallel downloads..."
 python3 -c "
+import os
 from huggingface_hub import snapshot_download
+from huggingface_hub.utils import tqdm
+
+# Configure for faster parallel downloads
 snapshot_download(
     repo_id='deepseek-ai/DeepSeek-OCR',
     local_dir='$MODEL_DIR',
-    local_dir_use_symlinks=False
+    local_dir_use_symlinks=False,
+    resume_download=True,
+    force_download=False,
+    max_workers=4,  # Parallel downloads
+    tqdm_class=tqdm,
+    tqdm_kwargs={'desc': 'Downloading model files', 'unit': 'file'}
 )
+print('✅ Model download completed successfully!')
 "
 
 # Verify installations
