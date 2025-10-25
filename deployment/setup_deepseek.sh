@@ -52,15 +52,38 @@ echo "🚀 Installing flash-attn (MUST HAVE for optimal performance)..."
 
 # Detect CUDA Toolkit installation
 echo "🔍 Checking CUDA Toolkit installation..."
-if command -v nvcc >/dev/null 2>&1; then
-    CUDA_HOME=$(dirname $(dirname $(which nvcc)))
-    echo "✅ CUDA Toolkit found at: $CUDA_HOME"
+
+# Check multiple possible CUDA installation locations
+CUDA_PATHS="/usr/local/cuda-12.1 /usr/local/cuda /opt/cuda"
+CUDA_HOME=""
+
+for path in $CUDA_PATHS; do
+    if [ -d "$path" ] && [ -f "$path/bin/nvcc" ]; then
+        CUDA_HOME="$path"
+        echo "✅ CUDA Toolkit found at: $CUDA_HOME"
+        break
+    fi
+
+    # Also check if nvcc is in PATH
+    if command -v nvcc >/dev/null 2>&1; then
+        CUDA_HOME=$(dirname $(dirname $(which nvcc)))
+        echo "✅ CUDA Toolkit found via PATH at: $CUDA_HOME"
+        break
+    fi
+done
+
+if [ -n "$CUDA_HOME" ]; then
     export CUDA_HOME
+    export PATH=$CUDA_HOME/bin:$PATH
+    export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
 else
     echo "❌ CUDA Toolkit not found. Installing CUDA 12.1 (compatible with flash-attn)..."
 
-    # Install CUDA Toolkit 12.1 (compatible with most flash-attn versions)
-    wget https://developer.download.nvidia.com/compute/cuda/12.1.0/local_installers/cuda_12.1.0_530.30.02_linux.run
+    # Check if CUDA installer already exists to avoid re-downloading
+    if [ ! -f "cuda_12.1.0_530.30.02_linux.run" ]; then
+        wget https://developer.download.nvidia.com/compute/cuda/12.1.0/local_installers/cuda_12.1.0_530.30.02_linux.run
+    fi
+
     chmod +x cuda_12.1.0_530.30.02_linux.run
     sudo ./cuda_12.1.0_530.30.02_linux.run --silent --toolkit --override
 
