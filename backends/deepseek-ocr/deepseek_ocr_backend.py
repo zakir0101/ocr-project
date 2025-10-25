@@ -86,8 +86,16 @@ class DeepSeekOCRBackend(OCRBackend):
                 from vllm.engine.arg_utils import AsyncEngineArgs
                 from vllm.model_executor.models.registry import ModelRegistry
                 from deepseek_ocr import DeepseekOCRForCausalLM
-                from process.image_process import DeepseekOCRProcessor
                 from process.ngram_norepeat import NoRepeatNGramLogitsProcessor
+
+                # Try to import the fixed processor first
+                try:
+                    from process.image_process_fixed import DeepseekOCRProcessor
+                    print("✓ Using fixed DeepseekOCRProcessor")
+                except ImportError:
+                    # Fallback to original processor
+                    from process.image_process import DeepseekOCRProcessor
+                    print("✓ Using original DeepseekOCRProcessor")
             except ImportError as e:
                 print(f"✗ Required modules not available: {e}")
                 return False
