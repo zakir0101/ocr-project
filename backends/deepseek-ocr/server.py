@@ -91,7 +91,7 @@ def health_check():
 if __name__ == '__main__':
     # Initialize backend on startup
     # Model path from deployment setup
-    model_path = "../models/deepseek-ocr"
+    model_path = "../../models/deepseek-ocr"
     backend = DeepSeekOCRBackend(model_path=model_path)
 
     if backend.load_model():
