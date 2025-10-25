@@ -28,7 +28,7 @@ uv pip install --force-reinstall numpy==1.26.4
 
 # Install vLLM 0.8.5 (official supported version) - EXACTLY like reference
 echo "Installing vLLM 0.8.5 (official supported version)..."
-uv pip install --timeout 600 vllm==0.8.5
+uv pip install vllm==0.8.5
 
 # Install required packages from official DeepSeek-OCR requirements
 echo "Installing required packages from official requirements..."
