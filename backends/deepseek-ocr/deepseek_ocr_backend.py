@@ -115,6 +115,16 @@ class DeepSeekOCRBackend(OCRBackend):
 
             self.engine = AsyncLLMEngine.from_engine_args(engine_args)
 
+            # Test processor creation to catch initialization errors early
+            print("✓ Testing processor creation...")
+            try:
+                # Create a test processor instance to verify it works
+                test_processor = DeepseekOCRProcessor()
+                print("✓ Processor creation successful")
+            except Exception as e:
+                print(f"✗ Processor creation failed: {e}")
+                raise
+
             # Processor will be created fresh each time like reference implementation
             print("✓ Processor will be created fresh for each request (like reference)")
 
