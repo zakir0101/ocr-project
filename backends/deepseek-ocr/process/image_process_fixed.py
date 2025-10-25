@@ -35,6 +35,10 @@ class DeepseekOCRProcessor:
                 print(f"✗ Model directory does not exist: {model_path}")
                 raise FileNotFoundError(f"Model directory not found: {model_path}")
 
+            # List files in model directory for debugging
+            model_files = os.listdir(model_path)
+            print(f"Model files: {model_files}")
+
             self.processor = AutoProcessor.from_pretrained(
                 model_path,
                 trust_remote_code=True
@@ -50,6 +54,8 @@ class DeepseekOCRProcessor:
 
         except Exception as e:
             print(f"✗ Failed to initialize DeepseekOCRProcessor: {e}")
+            import traceback
+            traceback.print_exc()
             # Create a fallback processor
             self._create_fallback_processor()
 
