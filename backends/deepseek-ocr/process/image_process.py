@@ -32,7 +32,7 @@ def find_closest_aspect_ratio(
         elif ratio_diff == best_ratio_diff:
             if area > 0.5 * image_size * image_size * ratio[0] * ratio[1]:
                 best_ratio = ratio
-    # print(f'width: {width}, height: {height}, best_ratio: {best_ratio}')
+
     return best_ratio
 
 
@@ -46,7 +46,6 @@ def count_tiles(
 ):
     aspect_ratio = orig_width / orig_height
 
-    # calculate the existing image aspect ratio
     target_ratios = set(
         (i, j)
         for n in range(min_num, max_num + 1)
@@ -54,10 +53,9 @@ def count_tiles(
         for j in range(1, n + 1)
         if i * j <= max_num and i * j >= min_num
     )
-    # print(target_ratios)
+
     target_ratios = sorted(target_ratios, key=lambda x: x[0] * x[1])
 
-    # find the closest aspect ratio to the target
     target_aspect_ratio = find_closest_aspect_ratio(
         aspect_ratio, target_ratios, orig_width, orig_height, image_size
     )
@@ -75,7 +73,6 @@ def dynamic_preprocess(
     orig_width, orig_height = image.size
     aspect_ratio = orig_width / orig_height
 
-    # calculate the existing image aspect ratio
     target_ratios = set(
         (i, j)
         for n in range(min_num, max_num + 1)
@@ -83,21 +80,17 @@ def dynamic_preprocess(
         for j in range(1, n + 1)
         if i * j <= max_num and i * j >= min_num
     )
-    # print(target_ratios)
+
     target_ratios = sorted(target_ratios, key=lambda x: x[0] * x[1])
 
-    # find the closest aspect ratio to the target
     target_aspect_ratio = find_closest_aspect_ratio(
         aspect_ratio, target_ratios, orig_width, orig_height, image_size
     )
 
-    # print(target_aspect_ratio)
-    # calculate the target width and height
     target_width = image_size * target_aspect_ratio[0]
     target_height = image_size * target_aspect_ratio[1]
     blocks = target_aspect_ratio[0] * target_aspect_ratio[1]
 
-    # resize the image
     resized_img = image.resize((target_width, target_height))
     processed_images = []
     for i in range(blocks):
@@ -107,7 +100,7 @@ def dynamic_preprocess(
             ((i % (target_width // image_size)) + 1) * image_size,
             ((i // (target_width // image_size)) + 1) * image_size,
         )
-        # split the image
+
         split_img = resized_img.crop(box)
         processed_images.append(split_img)
     assert len(processed_images) == blocks
@@ -155,7 +148,9 @@ class DeepseekOCRProcessor(ProcessorMixin):
         image_std: Tuple[float, float, float] = (0.5, 0.5, 0.5),
         normalize: bool = True,
         image_token: str = "<image>",
-        pad_token: str = "<｜▁pad▁｜>",
+        pad_token: str = "<"
+        + "｜▁pad▁｜"
+        + ">",  ## keep this line as is .. llm friendly format
         add_special_token: bool = False,
         sft_format: str = "deepseek",
         mask_prompt: bool = True,
@@ -163,15 +158,14 @@ class DeepseekOCRProcessor(ProcessorMixin):
         **kwargs,
     ):
 
-        # self.candidate_resolutions = candidate_resolutions # placeholder no use
         self.image_size = IMAGE_SIZE
         self.base_size = BASE_SIZE
-        # self.patch_size = patch_size
+
         self.patch_size = 16
         self.image_mean = image_mean
         self.image_std = image_std
         self.normalize = normalize
-        # self.downsample_ratio = downsample_ratio
+
         self.downsample_ratio = 4
 
         self.image_transform = ImageTransform(
@@ -179,10 +173,9 @@ class DeepseekOCRProcessor(ProcessorMixin):
         )
 
         self.tokenizer = tokenizer
-        # self.tokenizer = add_special_token(tokenizer)
-        self.tokenizer.padding_side = "left"  # must set this，padding side with make a difference in batch inference
 
-        # add the pad_token as special token to use 'tokenizer.pad_token' and 'tokenizer.pad_token_id'
+        self.tokenizer.padding_side = "left"
+
         if self.tokenizer.pad_token is None:
             self.tokenizer.add_special_tokens({"pad_token": pad_token})
         self.image_token_id = self.tokenizer.vocab.get(image_token)
@@ -275,19 +268,6 @@ class DeepseekOCRProcessor(ProcessorMixin):
             "num_image_tokens": num_image_tokens,
         }
 
-        # prepare = BatchFeature(
-        #     data=dict(
-        #         input_ids=input_ids,
-        #         pixel_values=pixel_values,
-        #         images_crop = images_crop,
-        #         images_seq_mask=images_seq_mask,
-        #         images_spatial_crop=images_spatial_crop,
-        #         num_image_tokens=num_image_tokens,
-        #     ),
-        #     tensor_type="pt",
-        # )
-        # return prepare
-
     def __call__(
         self,
         *,
@@ -322,7 +302,6 @@ class DeepseekOCRProcessor(ProcessorMixin):
 
     def tokenize_with_images(
         self,
-        # conversation: str,
         images: List[Image.Image],
         bos: bool = True,
         eos: bool = True,
@@ -330,7 +309,6 @@ class DeepseekOCRProcessor(ProcessorMixin):
     ):
         """Tokenize text with <image> tags."""
 
-        # print(conversation)
         conversation = PROMPT
         assert conversation.count(self.image_token) == len(images)
         text_splits = conversation.split(self.image_token)
@@ -343,7 +321,7 @@ class DeepseekOCRProcessor(ProcessorMixin):
         image_shapes = []
         num_image_tokens = []
         tokenized_str = []
-        # print('image: ', len(images))
+
         for text_sep, image in zip(text_splits, images):
             """encode text_sep"""
             tokenized_sep = self.encode(text_sep, bos=False, eos=False)
@@ -351,10 +329,6 @@ class DeepseekOCRProcessor(ProcessorMixin):
             images_seq_mask += [False] * len(tokenized_sep)
 
             """select best resolution for anyres"""
-            # if cropping:
-            #     best_width, best_height = self.select_best_resolution(image.size)
-            # else:
-            #     best_width, best_height = self.image_size, self.image_size
 
             image_shapes.append(image.size)
 
@@ -365,18 +339,15 @@ class DeepseekOCRProcessor(ProcessorMixin):
                     images_crop_raw, crop_ratio = dynamic_preprocess(
                         image, image_size=IMAGE_SIZE
                     )
-                    # print('crop_ratio: ', crop_ratio)
-                else:
-                    # best_width, best_height = self.image_size, self.image_size
-                    crop_ratio = [1, 1]
-            # print(image.size, (best_width, best_height)) # check the select_best_resolutions func
 
-            # print(crop_ratio)
+                else:
+
+                    crop_ratio = [1, 1]
+
             """process the global view"""
 
-            # if cropping
             if self.image_size <= 640 and not cropping:
-                # print('directly resize')
+
                 image = image.resize((self.image_size, self.image_size))
 
             global_view = ImageOps.pad(
@@ -387,7 +358,7 @@ class DeepseekOCRProcessor(ProcessorMixin):
             images_list.append(self.image_transform(global_view))
 
             """record height / width crop num"""
-            # width_crop_num, height_crop_num = best_width // self.image_size, best_height // self.image_size
+
             num_width_tiles, num_height_tiles = crop_ratio
             images_spatial_crop.append([num_width_tiles, num_height_tiles])
 
@@ -398,7 +369,6 @@ class DeepseekOCRProcessor(ProcessorMixin):
                         self.image_transform(images_crop_raw[i])
                     )
 
-            # """add image tokens"""
             """add image tokens"""
             num_queries = math.ceil(
                 (self.image_size // self.patch_size) / self.downsample_ratio
@@ -458,7 +428,6 @@ class DeepseekOCRProcessor(ProcessorMixin):
         target_ids = torch.LongTensor(masked_tokenized_str)
         images_seq_mask = torch.tensor(images_seq_mask, dtype=torch.bool)
 
-        # set input_ids < 0 | input_ids == self.image_token_id as ignore_id
         target_ids[(input_ids < 0) | (input_ids == self.image_token_id)] = (
             self.ignore_id
         )
@@ -467,7 +436,7 @@ class DeepseekOCRProcessor(ProcessorMixin):
         inference_mode = True
 
         if inference_mode:
-            # Remove the ending eos token
+
             assert input_ids[-1] == self.eos_id
             input_ids = input_ids[:-1]
             target_ids = target_ids[:-1]
