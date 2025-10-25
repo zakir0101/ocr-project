@@ -409,13 +409,19 @@ class DeepSeekOCRBackend(OCRBackend):
             image_path = "/tmp/temp_image.png"
             image.save(image_path)
 
-            # Process image using DeepSeek OCR processor
-            processed_inputs = self.processor(
-                prompt=DEEPSEEK_PROMPT,
-                images=[image_path],
-                return_tensors="pt",
+            # Process image using DeepSeek OCR processor - EXACTLY like reference
+            image_features = self.processor.tokenize_with_images(
+                images=[image],
+                bos=True,
+                eos=True,
                 cropping=CROP_MODE
             )
+
+            # Create request exactly like reference implementation
+            request = {
+                "prompt": DEEPSEEK_PROMPT,
+                "multi_modal_data": {"image": image_features}
+            }
 
             # Prepare sampling parameters
             sampling_params = SamplingParams(
@@ -426,14 +432,13 @@ class DeepSeekOCRBackend(OCRBackend):
                 logits_processors=[NoRepeatNGramLogitsProcessor(ngram_size=3)]
             )
 
-            # Generate OCR output using vLLM engine
+            # Generate OCR output using vLLM engine - EXACTLY like reference
             request_id = f"ocr_{int(time.time())}"
 
             async for request_output in self.engine.generate(
-                prompt=DEEPSEEK_PROMPT,
+                request,
                 sampling_params=sampling_params,
-                request_id=request_id,
-                **processed_inputs
+                request_id=request_id
             ):
                 if request_output.outputs:
                     full_text = request_output.outputs[0].text
