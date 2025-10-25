@@ -36,7 +36,6 @@ pip install --timeout 600 vllm==0.8.5
 
 # Install required packages from official DeepSeek-OCR requirements
 echo "Installing required packages from official requirements..."
-pip install transformers==4.46.3 tokenizers==0.20.3
 pip install PyMuPDF img2pdf einops easydict addict Pillow
 
 # Install server dependencies
