@@ -30,6 +30,10 @@ pip install uv
 echo "Installing NumPy 1.26.4 (required version)..."
 pip install --force-reinstall numpy==1.26.4
 
+# Install compatible PyTorch version for vLLM 0.8.5 (vLLM was compiled against PyTorch 2.5.1)
+echo "Installing PyTorch 2.5.1 (compatible with vLLM 0.8.5)..."
+pip install torch==2.5.1 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
 # Install vLLM 0.8.5 (official supported version) - EXACTLY like reference
 echo "Installing vLLM 0.8.5 (official supported version)..."
 pip install --timeout 600 vllm==0.8.5
