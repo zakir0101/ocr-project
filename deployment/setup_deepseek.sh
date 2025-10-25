@@ -120,7 +120,8 @@ if [ "$MODEL_EXISTS" = true ]; then
 else
     # Download using huggingface_hub with token from environment variable
     echo "🚀 Downloading DeepSeek OCR model with authentication..."
-    python3 -c "
+    echo "Using HUGGINGFACE_HUB_TOKEN: ${HUGGINGFACE_HUB_TOKEN:0:10}..."
+    HUGGINGFACE_HUB_TOKEN="$HUGGINGFACE_HUB_TOKEN" python3 -c "
 from huggingface_hub import snapshot_download
 import os
 
