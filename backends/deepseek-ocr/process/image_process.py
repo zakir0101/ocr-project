@@ -172,6 +172,13 @@ class DeepseekOCRProcessor(ProcessorMixin):
             mean=image_mean, std=image_std, normalize=normalize
         )
 
+        # Initialize tokenizer if None
+        if tokenizer is None:
+            from transformers import AutoTokenizer
+            from config import MODEL_PATH
+            print(f"✓ Initializing tokenizer from {MODEL_PATH}")
+            tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, trust_remote_code=True)
+
         self.tokenizer = tokenizer
 
         self.tokenizer.padding_side = "left"
