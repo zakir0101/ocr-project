@@ -467,3 +467,11 @@ CURRENT_SSH_SERVER_PORT="40146"
 - use sleep to wait for long runnign task
 - no .. no wati .. did I not tell you . its forbidden to change could in the server only change code local then add,commit,push
 - you are not supposed to read/modify the image_process.py file at any cost .. just look how its imported and used in the reference impl
+
+
+
+Note:
+
+      "Read(**/image_process.py)",
+      "Read(/tmp/**/process/image_process.py)",
+      "Read(/tmp/DeepSeek-OCR/DeepSeek-OCR-master/DeepSeek-OCR-vllm/process/image_process.py)"
