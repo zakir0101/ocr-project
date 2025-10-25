@@ -20,27 +20,27 @@ source ../backends/deepseek-ocr/venv/bin/activate
 
 # Install dependencies
 echo "📦 Installing DeepSeek dependencies..."
-uv pip install --upgrade pip
+python -m pip install --upgrade pip
 
 # Force correct NumPy version (required by DeepSeek-OCR)
 echo "Installing NumPy 1.26.4 (required version)..."
-uv pip install --force-reinstall numpy==1.26.4
+python -m pip install --force-reinstall numpy==1.26.4
 
 # Install vLLM 0.8.5 (official supported version) - EXACTLY like reference
 echo "Installing vLLM 0.8.5 (official supported version)..."
-uv pip install vllm==0.8.5
+python -m pip install vllm==0.8.5
 
 # Install required packages from official DeepSeek-OCR requirements
 echo "Installing required packages from official requirements..."
-uv pip install PyMuPDF img2pdf einops easydict addict Pillow
+python -m pip install PyMuPDF img2pdf einops easydict addict Pillow
 
 # Install server dependencies
 echo "Installing server dependencies..."
-uv pip install flask flask-cors
+python -m pip install flask flask-cors
 
 # Install optional packages (may fail on some systems)
 echo "Installing optional packages..."
-uv pip install matplotlib || echo "⚠ matplotlib installation failed (optional)"
+python -m pip install matplotlib || echo "⚠ matplotlib installation failed (optional)"
 
 # Install flash-attn (MUST HAVE for optimal performance)
 echo "🚀 Installing flash-attn (MUST HAVE for optimal performance)..."
@@ -90,11 +90,11 @@ else
 fi
 
 # Install wheel first (required for flash-attn build but not declared as dependency)
-uv pip install wheel
+python -m pip install wheel
 echo "Installing flash-attn with CUDA support..."
 
 # Install flash-attn with CUDA Toolkit - NO FALLBACKS, NO PRE-BUILT WHEELS
-uv pip install flash-attn --no-build-isolation
+python -m pip install flash-attn --no-build-isolation
 
 # Download DeepSeek OCR model using simple approach (avoids UI freezing)
 echo "📥 Downloading DeepSeek OCR model..."

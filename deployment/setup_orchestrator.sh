@@ -16,15 +16,15 @@ source ../orchestrator/venv/bin/activate
 
 # Install dependencies
 echo "📦 Installing orchestrator dependencies..."
-pip install --upgrade pip
+python -m pip install --upgrade pip
 
 # Install core dependencies
 echo "Installing core dependencies..."
-pip install flask flask-cors requests Pillow
+python -m pip install flask flask-cors requests Pillow
 
 # Install additional utilities
 echo "Installing additional utilities..."
-pip install numpy opencv-python
+python -m pip install numpy opencv-python
 
 # Verify installations
 echo "Verifying installations..."

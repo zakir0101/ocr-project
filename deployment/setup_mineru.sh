@@ -20,24 +20,24 @@ source ../backends/mineru/venv/bin/activate
 
 # Install dependencies
 echo "📦 Installing Mineru dependencies..."
-pip install --upgrade pip
+python -m pip install --upgrade pip
 
 # Install uv for faster package management
 echo "Installing uv for package management..."
-pip install uv
+python -m pip install uv
 
 # Install MinerU core package with increased timeout for large CUDA packages
 echo "Installing MinerU core package..."
 export UV_HTTP_TIMEOUT=300
-uv pip install -U "mineru[core]"
+python -m pip install -U "mineru[core]"
 
 # Install server dependencies
 echo "Installing server dependencies..."
-uv pip install flask flask-cors Pillow
+python -m pip install flask flask-cors Pillow
 
 # Install optional packages
 echo "Installing optional packages..."
-uv pip install opencv-python || echo "⚠ OpenCV installation failed (optional)"
+python -m pip install opencv-python || echo "⚠ OpenCV installation failed (optional)"
 
 # Verify installations
 echo "Verifying installations..."
