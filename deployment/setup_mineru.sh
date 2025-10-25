@@ -26,17 +26,18 @@ pip install --upgrade pip
 echo "Installing uv for package management..."
 pip install uv
 
-# Install MinerU core package
+# Install MinerU core package with increased timeout for large CUDA packages
 echo "Installing MinerU core package..."
+export UV_HTTP_TIMEOUT=300
 uv pip install -U "mineru[core]"
 
 # Install server dependencies
 echo "Installing server dependencies..."
-pip install flask flask-cors Pillow
+uv pip install flask flask-cors Pillow
 
 # Install optional packages
 echo "Installing optional packages..."
-pip install opencv-python || echo "⚠ OpenCV installation failed (optional)"
+uv pip install opencv-python || echo "⚠ OpenCV installation failed (optional)"
 
 # Verify installations
 echo "Verifying installations..."
