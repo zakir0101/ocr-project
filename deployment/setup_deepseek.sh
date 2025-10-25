@@ -28,28 +28,24 @@ pip install uv
 
 # Force correct NumPy version (required by DeepSeek-OCR)
 echo "Installing NumPy 1.26.4 (required version)..."
-uv pip install numpy==1.26.4
+pip install --force-reinstall numpy==1.26.4
 
-# Install PyTorch 2.6.0 first (compatible with vLLM 0.8.5)
-echo "Installing PyTorch 2.6.0..."
-uv pip install torch==2.6.0 torchvision torchaudio
-
-# Install vLLM 0.8.5 (official supported version)
+# Install vLLM 0.8.5 (official supported version) - EXACTLY like reference
 echo "Installing vLLM 0.8.5 (official supported version)..."
-uv pip install vllm==0.8.5
+pip install --timeout 600 vllm==0.8.5
 
 # Install required packages from official DeepSeek-OCR requirements
 echo "Installing required packages from official requirements..."
-uv pip install transformers==4.46.3 tokenizers==0.20.3
-uv pip install PyMuPDF img2pdf einops easydict addict Pillow
+pip install transformers==4.46.3 tokenizers==0.20.3
+pip install PyMuPDF img2pdf einops easydict addict Pillow
 
 # Install server dependencies
 echo "Installing server dependencies..."
-uv pip install flask flask-cors
+pip install flask flask-cors
 
 # Install optional packages (may fail on some systems)
 echo "Installing optional packages..."
-uv pip install matplotlib || echo "⚠ matplotlib installation failed (optional)"
+pip install matplotlib || echo "⚠ matplotlib installation failed (optional)"
 
 # Install flash-attn (MUST HAVE for optimal performance)
 echo "🚀 Installing flash-attn (MUST HAVE for optimal performance)..."
