@@ -137,7 +137,6 @@ print('🚀 Starting download...')
 snapshot_download(
     repo_id=REPO_ID,
     local_dir=MODEL_DIR,
-    local_dir_use_symlinks=False,
     force_download=False,
     max_workers=4
 )
