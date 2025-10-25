@@ -97,9 +97,10 @@ class DeepSeekOCRBackend(OCRBackend):
             # Register model
             ModelRegistry.register_model("DeepseekOCRForCausalLM", DeepseekOCRForCausalLM)
 
-            # Initialize vLLM engine
+            # Initialize vLLM engine - EXACTLY like reference implementation
             engine_args = AsyncEngineArgs(
                 model=str(self.model_path),
+                hf_overrides={"architectures": ["DeepseekOCRForCausalLM"]},
                 tokenizer=str(self.model_path),
                 tensor_parallel_size=1,
                 dtype="bfloat16",
