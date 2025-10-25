@@ -95,9 +95,12 @@ class DeepSeekOCRBackend(OCRBackend):
                 return False
 
             # Register model
+            print("✓ Registering DeepseekOCRForCausalLM model...")
             ModelRegistry.register_model("DeepseekOCRForCausalLM", DeepseekOCRForCausalLM)
+            print("✓ Model registration successful")
 
             # Initialize vLLM engine - EXACTLY like reference implementation
+            print("✓ Initializing vLLM engine...")
             engine_args = AsyncEngineArgs(
                 model=str(self.model_path),
                 hf_overrides={"architectures": ["DeepseekOCRForCausalLM"]},
@@ -113,7 +116,9 @@ class DeepSeekOCRBackend(OCRBackend):
                 disable_custom_all_reduce=True,
             )
 
+            print("✓ Creating AsyncLLMEngine...")
             self.engine = AsyncLLMEngine.from_engine_args(engine_args)
+            print("✓ vLLM engine initialization successful")
 
             # Test processor creation to catch initialization errors early
             print("✓ Testing processor creation...")
