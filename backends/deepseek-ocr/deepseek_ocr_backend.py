@@ -88,14 +88,9 @@ class DeepSeekOCRBackend(OCRBackend):
                 from deepseek_ocr import DeepseekOCRForCausalLM
                 from process.ngram_norepeat import NoRepeatNGramLogitsProcessor
 
-                # Try to import the fixed processor first
-                try:
-                    from process.image_process_fixed import DeepseekOCRProcessor
-                    print("✓ Using fixed DeepseekOCRProcessor")
-                except ImportError:
-                    # Fallback to original processor
-                    from process.image_process import DeepseekOCRProcessor
-                    print("✓ Using original DeepseekOCRProcessor")
+                # Import processor exactly like reference implementation
+                from process.image_process import DeepseekOCRProcessor
+                print("✓ Using DeepseekOCRProcessor from process.image_process")
             except ImportError as e:
                 print(f"✗ Required modules not available: {e}")
                 return False
