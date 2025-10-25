@@ -23,12 +23,17 @@ class DeepseekOCRProcessor:
         """Initialize the processor with tokenizer and image processor."""
         try:
             # Try to load the processor from the model directory
+            # Use absolute path from project root
+            import os
+            project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            model_path = os.path.join(project_root, "models", "deepseek-ocr")
+
             self.processor = AutoProcessor.from_pretrained(
-                "../../models/deepseek-ocr",
+                model_path,
                 trust_remote_code=True
             )
             self.tokenizer = AutoTokenizer.from_pretrained(
-                "../../models/deepseek-ocr",
+                model_path,
                 trust_remote_code=True
             )
 
