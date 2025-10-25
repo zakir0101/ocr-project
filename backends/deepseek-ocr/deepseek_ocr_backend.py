@@ -119,17 +119,17 @@ class DeepSeekOCRBackend(OCRBackend):
             try:
                 self.processor = DeepseekOCRProcessor()
                 if self.processor is None:
-                    print("✗ DeepseekOCRProcessor() returned None")
-                    return False
+                    print("✗ DeepseekOCRProcessor() returned None - CRITICAL ERROR")
+                    raise Exception("DeepseekOCRProcessor() returned None")
 
                 # Test if processor has required attributes
                 if not hasattr(self.processor, 'padding_side'):
-                    print("✗ DeepseekOCRProcessor missing 'padding_side' attribute")
-                    return False
+                    print("✗ DeepseekOCRProcessor missing 'padding_side' attribute - CRITICAL ERROR")
+                    raise Exception("DeepseekOCRProcessor missing 'padding_side' attribute")
 
             except Exception as e:
                 print(f"✗ Failed to initialize DeepseekOCRProcessor: {e}")
-                return False
+                raise
 
             self.model_loaded = True
             print("✓ DeepSeek OCR model loaded successfully into GPU 0")
