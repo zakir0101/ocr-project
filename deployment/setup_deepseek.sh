@@ -30,7 +30,11 @@ pip install uv
 echo "Installing NumPy 1.26.4 (required version)..."
 uv pip install numpy==1.26.4
 
-# Install vLLM 0.8.5 (official supported version) - let it pull compatible PyTorch
+# Install PyTorch 2.6.0 first (compatible with vLLM 0.8.5)
+echo "Installing PyTorch 2.6.0..."
+uv pip install torch==2.6.0 torchvision torchaudio
+
+# Install vLLM 0.8.5 (official supported version)
 echo "Installing vLLM 0.8.5 (official supported version)..."
 uv pip install vllm==0.8.5
 
