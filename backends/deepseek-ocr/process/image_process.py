@@ -1,4 +1,5 @@
 import math
+import os
 from typing import List, Tuple
 
 import torch
@@ -177,6 +178,8 @@ class DeepseekOCRProcessor(ProcessorMixin):
             from transformers import AutoTokenizer
             from config import MODEL_PATH
             print(f"✓ Initializing tokenizer from {MODEL_PATH}")
+            print(f"✓ Current working directory: {os.getcwd()}")
+            print(f"✓ Model path exists: {os.path.exists(MODEL_PATH)}")
             tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, trust_remote_code=True)
 
         self.tokenizer = tokenizer
