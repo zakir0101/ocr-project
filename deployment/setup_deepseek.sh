@@ -111,7 +111,6 @@ echo "Downloading model from HuggingFace with parallel downloads..."
 python3 -c "
 import os
 from huggingface_hub import snapshot_download
-from huggingface_hub.utils import tqdm
 
 # Configure for faster parallel downloads
 snapshot_download(
@@ -120,9 +119,7 @@ snapshot_download(
     local_dir_use_symlinks=False,
     resume_download=True,
     force_download=False,
-    max_workers=4,  # Parallel downloads
-    tqdm_class=tqdm,
-    tqdm_kwargs={'desc': 'Downloading model files', 'unit': 'file'}
+    max_workers=4  # Parallel downloads
 )
 print('✅ Model download completed successfully!')
 "
