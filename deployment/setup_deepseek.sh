@@ -118,31 +118,21 @@ done
 if [ "$MODEL_EXISTS" = true ]; then
     echo "✅ Model already exists with all required files, skipping download"
 else
-    # Download using huggingface_hub with token from environment variable
-    echo "🚀 Downloading DeepSeek OCR model with authentication..."
-    echo "Using HUGGINGFACE_HUB_TOKEN: ${HUGGINGFACE_HUB_TOKEN:0:10}..."
-    HUGGINGFACE_HUB_TOKEN="$HUGGINGFACE_HUB_TOKEN" python3 -c "
+    # Download using huggingface_hub (exact reference implementation)
+    echo "🚀 Downloading DeepSeek OCR model..."
+    python3 -c "
 from huggingface_hub import snapshot_download
-import os
 
 MODEL_DIR = '$MODEL_DIR'
 REPO_ID = 'deepseek-ai/DeepSeek-OCR'
 
 print('Downloading DeepSeek OCR model...')
-try:
-    snapshot_download(
-        repo_id=REPO_ID,
-        local_dir=MODEL_DIR,
-        force_download=False,
-        local_dir_use_symlinks=False,
-        token=os.environ.get('HUGGINGFACE_HUB_TOKEN')
-    )
-    print('✅ DeepSeek OCR model downloaded successfully!')
-except Exception as e:
-    print(f'❌ DeepSeek OCR model download failed: {e}')
-    print('Please set HUGGINGFACE_HUB_TOKEN environment variable with your Hugging Face token')
-    print('export HUGGINGFACE_HUB_TOKEN=your_token_here')
-    exit(1)
+snapshot_download(
+    repo_id=REPO_ID,
+    local_dir=MODEL_DIR,
+    local_dir_use_symlinks=False
+)
+print('✅ DeepSeek OCR model downloaded successfully!')
 "
 fi
 
