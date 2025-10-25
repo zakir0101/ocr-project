@@ -26,13 +26,17 @@ pip install --upgrade pip
 echo "Installing uv for package management..."
 pip install uv
 
-# Install vLLM with automatic PyTorch backend selection (recommended approach)
-echo "Installing vLLM with automatic PyTorch backend selection..."
-uv pip install vllm==0.8.5 --torch-backend=auto
+# Install compatible PyTorch version first (required for vLLM compatibility)
+echo "Installing compatible PyTorch version..."
+uv pip install torch==2.6.0 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 
 # Force correct NumPy version (required by DeepSeek-OCR)
 echo "Installing NumPy 1.26.4 (required version)..."
 uv pip install numpy==1.26.4
+
+# Install vLLM with explicit PyTorch compatibility
+echo "Installing vLLM with explicit PyTorch compatibility..."
+uv pip install vllm==0.8.5
 
 # Install required packages from official DeepSeek-OCR requirements
 echo "Installing required packages from official requirements..."
@@ -145,9 +149,10 @@ fi
 # Verify installations
 echo "Verifying installations..."
 python -c "import numpy; print(f'✓ NumPy: {numpy.__version__}')"
+python -c "import torch; print(f'✓ PyTorch: {torch.__version__}')"
+python -c "import torch; print(f'✓ CUDA available: {torch.cuda.is_available()}')"
 python -c "import vllm; print(f'✓ vLLM: {vllm.__version__}')"
 python -c "import transformers; print(f'✓ Transformers: {transformers.__version__}')"
-python -c "import torch; print(f'✓ PyTorch: {torch.__version__}')"
 python -c "import flask; print(f'✓ Flask: {flask.__version__}')"
 
 echo ""
