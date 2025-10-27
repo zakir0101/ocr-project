@@ -392,7 +392,11 @@ class DeepSeekOCRBackend(OCRBackend):
                 temperature=0.1,
                 top_p=0.9,
                 max_tokens=4096,
-                logits_processors=[NoRepeatNGramLogitsProcessor(ngram_size=3)],
+                logits_processors=[NoRepeatNGramLogitsProcessor(
+                    ngram_size=30,
+                    window_size=90,
+                    whitelist_token_ids={128821, 128822}
+                )],
             )
             outputs_list = self.engine.generate(
                 batch_inputs, sampling_params=sampling_params
@@ -487,7 +491,11 @@ class DeepSeekOCRBackend(OCRBackend):
                 temperature=0.1,
                 top_p=0.9,
                 max_tokens=4096,
-                logits_processors=[NoRepeatNGramLogitsProcessor(ngram_size=3)],
+                logits_processors=[NoRepeatNGramLogitsProcessor(
+                    ngram_size=30,
+                    window_size=90,
+                    whitelist_token_ids={128821, 128822}
+                )],
             )
 
             # Generate OCR output using vLLM engine - EXACTLY like reference
