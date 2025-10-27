@@ -20,14 +20,14 @@ from flask import Flask, request, jsonify
 from shared.ocr_backend import OCRBackend
 from shared.api_contract import create_unified_response
 
-# Import config for image processing (same as official code)
-from process.config import BASE_SIZE, IMAGE_SIZE, CROP_MODE
 
 # Set vLLM to use legacy API (compatible with DeepSeek OCR)
 os.environ["VLLM_USE_V1"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = '0'
 
 # Configuration
 DEEPSEEK_PROMPT = "<image>\n<|grounding|>Convert the document to markdown."
+CROP_MODE = True
 
 
 class DeepSeekOCRBackend(OCRBackend):
@@ -114,17 +114,15 @@ class DeepSeekOCRBackend(OCRBackend):
                 model=str(self.model_path),
                 hf_overrides={"architectures": ["DeepseekOCRForCausalLM"]},
                 tokenizer=str(self.model_path),
-                tensor_parallel_size=1,
-                dtype="bfloat16",
-                gpu_memory_utilization=0.75,
-                max_model_len=8192,
                 block_size=256,
                 enforce_eager=False,
-                enable_chunked_prefill=True,
-                max_num_batched_tokens=8192,
-                max_num_seqs=16,
                 trust_remote_code=True,
-                disable_custom_all_reduce=True,
+                max_model_len=8192,
+                swap_space=0,
+                max_num_seqs=100,  # Like official MAX_CONCURRENCY
+                tensor_parallel_size=1,
+                gpu_memory_utilization=0.9,  # Official uses 0.9
+                disable_mm_preprocessor_cache=True,  # CRITICAL: Official uses this
             )
             print("✓ vLLM engine initialization successful")
 
@@ -339,27 +337,23 @@ class DeepSeekOCRBackend(OCRBackend):
             if not images:
                 raise ValueError("No valid pages selected for processing")
 
-            # Process images in parallel using ThreadPoolExecutor
+            # Process images exactly like official code
             batch_inputs = []
-            with ThreadPoolExecutor(
-                max_workers=min(len(images), 4)
-            ) as executor:
-                # Prepare batch inputs using official approach
-                for image in images:
-                    from process.image_process import DeepseekOCRProcessor
+            for image in images:
+                from process.image_process import DeepseekOCRProcessor
 
-                    cache_item = {
-                        "prompt": DEEPSEEK_PROMPT,
-                        "multi_modal_data": {
-                            "image": DeepseekOCRProcessor().tokenize_with_images(
-                                images=[image],
-                                bos=True,
-                                eos=True,
-                                cropping=CROP_MODE,
-                            )
-                        },
-                    }
-                    batch_inputs.append(cache_item)
+                cache_item = {
+                    "prompt": DEEPSEEK_PROMPT,
+                    "multi_modal_data": {
+                        "image": DeepseekOCRProcessor().tokenize_with_images(
+                            images=[image],
+                            bos=True,
+                            eos=True,
+                            cropping=CROP_MODE,
+                        )
+                    },
+                }
+                batch_inputs.append(cache_item)
 
             # Generate OCR results for all pages using official sampling parameters
             from vllm import SamplingParams
