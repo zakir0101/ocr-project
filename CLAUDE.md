@@ -43,8 +43,8 @@ This document provides essential information for Claude assistants to effectivel
 
 #### **1. Full Deployment (Recommended)**
  
-CURRENT_SSH_SERVER_ADDRESS="zakir@77.104.167.148" 
-CURRENT_SSH_SERVER_PORT="40146"
+CURRENT_SSH_SERVER_ADDRESS="163.5.212.39" 
+CURRENT_SSH_SERVER_PORT="26300"
 
 ```bash
 # Deploy all changes to server with configurable parameters
@@ -462,16 +462,13 @@ do you understand me !!
 
 
 
-CURRENT_SSH_SERVER_ADDRESS="zakir@77.104.167.148" 
-CURRENT_SSH_SERVER_PORT="40146"
+CURRENT_SSH_SERVER_ADDRESS="163.5.212.39" 
+CURRENT_SSH_SERVER_PORT="26300"
+
 - use sleep to wait for long runnign task
 - no .. no wati .. did I not tell you . its forbidden to change could in the server only change code local then add,commit,push
 - you are not supposed to read/modify the image_process.py file at any cost .. just look how its imported and used in the reference impl
 
 
 
-Note:
 
-      "Read(**/image_process.py)",
-      "Read(/tmp/**/process/image_process.py)",
-      "Read(/tmp/DeepSeek-OCR/DeepSeek-OCR-master/DeepSeek-OCR-vllm/process/image_process.py)"

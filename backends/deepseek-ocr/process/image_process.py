@@ -369,6 +369,11 @@ class DeepseekOCRProcessor(ProcessorMixin):
                 (self.base_size, self.base_size),
                 color=tuple(int(x * 255) for x in self.image_transform.mean),
             )
+            # Convert to RGB to ensure 3 channels (remove alpha channel if present)
+            if global_view.mode in ('RGBA', 'LA', 'P'):
+                global_view = global_view.convert('RGB')
+            elif global_view.mode != 'RGB':
+                global_view = global_view.convert('RGB')
             images_list.append(self.image_transform(global_view))
 
             """record height / width crop num"""
@@ -379,8 +384,14 @@ class DeepseekOCRProcessor(ProcessorMixin):
             if num_width_tiles > 1 or num_height_tiles > 1:
                 """process the local views"""
                 for i in range(len(images_crop_raw)):
+                    crop_img = images_crop_raw[i]
+                    # Convert to RGB to ensure 3 channels (remove alpha channel if present)
+                    if crop_img.mode in ('RGBA', 'LA', 'P'):
+                        crop_img = crop_img.convert('RGB')
+                    elif crop_img.mode != 'RGB':
+                        crop_img = crop_img.convert('RGB')
                     images_crop_list.append(
-                        self.image_transform(images_crop_raw[i])
+                        self.image_transform(crop_img)
                     )
 
             """add image tokens"""

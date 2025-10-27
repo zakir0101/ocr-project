@@ -176,8 +176,13 @@ class DeepSeekOCRBackend(OCRBackend):
         start_time = time.time()
 
         try:
-            # Load and process image
+            # Load and process image - ensure RGB format
             image = Image.open(image_path)
+            # Convert to RGB to ensure 3 channels (remove alpha channel if present)
+            if image.mode in ('RGBA', 'LA', 'P'):
+                image = image.convert('RGB')
+            elif image.mode != 'RGB':
+                image = image.convert('RGB')
 
             # Process image through DeepSeek OCR
             raw_output = self._process_image_with_deepseek(image, **kwargs)
@@ -337,6 +342,11 @@ class DeepSeekOCRBackend(OCRBackend):
                 pixmap = page.get_pixmap(matrix=matrix, alpha=False)
                 img_data = pixmap.tobytes("png")
                 img = Image.open(io.BytesIO(img_data))
+                # Convert to RGB to ensure 3 channels (remove alpha channel if present)
+                if img.mode in ('RGBA', 'LA', 'P'):
+                    img = img.convert('RGB')
+                elif img.mode != 'RGB':
+                    img = img.convert('RGB')
                 images.append(img)
 
             doc.close()
