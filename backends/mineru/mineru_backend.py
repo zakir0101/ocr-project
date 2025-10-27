@@ -392,6 +392,9 @@ class MineruBackend(OCRBackend):
                 # Fix line breaks - ensure proper paragraph spacing
                 markdown_content = self._fix_line_breaks(markdown_content)
 
+                # Add HTML line breaks for rendered output
+                markdown_content = self._add_line_breaks_to_html(markdown_content)
+
                 # Copy images to permanent location for serving
                 self._copy_images_to_serving_location(image_dir)
 
@@ -546,3 +549,26 @@ class MineruBackend(OCRBackend):
 
         except Exception as e:
             print(f"🔍 DEBUG: Error copying images to serving location: {e}")
+
+    def _add_line_breaks_to_html(self, html_content: str) -> str:
+        """
+        Add line breaks to HTML content for proper spacing.
+        Converts newlines to <br> tags while preserving existing HTML structure.
+
+        Args:
+            html_content: HTML content with newlines
+
+        Returns:
+            str: HTML content with <br> tags
+        """
+        import re
+
+        if not html_content:
+            return html_content
+
+        # Convert double newlines to <br><br> (paragraph breaks)
+        html_content = re.sub(r'\n\s*\n', '<br><br>', html_content)
+        # Convert single newlines to <br> (line breaks)
+        html_content = re.sub(r'\n', '<br>', html_content)
+
+        return html_content

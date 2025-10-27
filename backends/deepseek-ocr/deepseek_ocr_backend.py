@@ -198,7 +198,9 @@ class DeepSeekOCRBackend(OCRBackend):
                 self._crop_and_save_images(image_path, matches_images)
 
             # Extract rendered HTML and bounding boxes
-            rendered_html = self._extract_markdown_from_output(raw_output)
+            rendered_html = self._extract_source_markdown_from_output(raw_output)
+            # Add line breaks to rendered HTML
+            rendered_html = self._add_line_breaks_to_html(rendered_html)
             boxes_image = self._generate_boxes_image(image, raw_output)
 
             processing_time = time.time() - start_time
@@ -266,7 +268,9 @@ class DeepSeekOCRBackend(OCRBackend):
             )
 
             # Create proper RENDERED output - use same function as image processing
-            rendered_html = self._extract_markdown_from_output(markdown_result)
+            rendered_html = self._extract_source_markdown_from_output(markdown_result)
+            # Add line breaks to rendered HTML
+            rendered_html = self._add_line_breaks_to_html(rendered_html)
 
             processing_time = time.time() - start_time
 
@@ -920,6 +924,29 @@ class DeepSeekOCRBackend(OCRBackend):
         except Exception as e:
             print(f"Error generating boxes image: {e}")
             return ""
+
+    def _add_line_breaks_to_html(self, html_content: str) -> str:
+        """
+        Add line breaks to HTML content for proper spacing.
+        Converts newlines to <br> tags while preserving existing HTML structure.
+
+        Args:
+            html_content: HTML content with newlines
+
+        Returns:
+            str: HTML content with <br> tags
+        """
+        import re
+
+        if not html_content:
+            return html_content
+
+        # Convert double newlines to <br><br> (paragraph breaks)
+        html_content = re.sub(r'\n\s*\n', '<br><br>', html_content)
+        # Convert single newlines to <br> (line breaks)
+        html_content = re.sub(r'\n', '<br>', html_content)
+
+        return html_content
 
 
 # Flask server for DeepSeek backend
