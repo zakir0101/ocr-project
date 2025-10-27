@@ -20,11 +20,8 @@ source ../backends/mineru/venv/bin/activate
 
 # Install dependencies
 echo "📦 Installing Mineru dependencies..."
-pip install --upgrade pip
+uv pip install --upgrade pip
 
-# Install uv for faster package management
-echo "Installing uv for package management..."
-pip install uv
 
 # Install MinerU core package with increased timeout for large CUDA packages
 echo "Installing MinerU core package..."
