@@ -95,6 +95,7 @@ class MineruBackend(OCRBackend):
                     read_fn,
                     convert_pdf_bytes_to_bytes_by_pypdfium2,
                 )
+                from mineru.utils.enum_class import MakeMode
 
                 # Store the imported functions for later use
                 self.pipeline_doc_analyze = pipeline_doc_analyze
@@ -375,7 +376,7 @@ class MineruBackend(OCRBackend):
                 image_dir = str(local_image_dir)
                 print(f"🔍 DEBUG: Using image_dir={image_dir}")
                 markdown_content = self.pipeline_union_make(
-                    middle_json["pdf_info"], "MM_MD", image_dir
+                    middle_json["pdf_info"], MakeMode.MM_MD, image_dir
                 )
 
                 # Prepare raw output
