@@ -22,7 +22,9 @@ from shared.ocr_backend import OCRBackend
 from shared.api_contract import create_unified_response
 
 # Configuration
-MINERU_PROMPT = "Extract text from this document and convert to markdown format."
+MINERU_PROMPT = (
+    "Extract text from this document and convert to markdown format."
+)
 
 
 class MineruBackend(OCRBackend):
@@ -52,7 +54,9 @@ class MineruBackend(OCRBackend):
         os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
         print(f"MineruBackend initialized with model_path: {model_path}")
-        print(f"GPU isolation: CUDA_VISIBLE_DEVICES={os.environ.get('CUDA_VISIBLE_DEVICES')}")
+        print(
+            f"GPU isolation: CUDA_VISIBLE_DEVICES={os.environ.get('CUDA_VISIBLE_DEVICES')}"
+        )
 
     def load_model(self) -> bool:
         """
@@ -74,20 +78,34 @@ class MineruBackend(OCRBackend):
 
             # Import required Mineru modules
             try:
-                from mineru.backend.pipeline.pipeline_analyze import doc_analyze as pipeline_doc_analyze
-                from mineru.backend.pipeline.pipeline_middle_json_mkcontent import union_make as pipeline_union_make
-                from mineru.backend.pipeline.model_json_to_middle_json import result_to_middle_json as pipeline_result_to_middle_json
+                from mineru.backend.pipeline.pipeline_analyze import (
+                    doc_analyze as pipeline_doc_analyze,
+                )
+                from mineru.backend.pipeline.pipeline_middle_json_mkcontent import (
+                    union_make as pipeline_union_make,
+                )
+                from mineru.backend.pipeline.model_json_to_middle_json import (
+                    result_to_middle_json as pipeline_result_to_middle_json,
+                )
                 from mineru.data.data_reader_writer import FileBasedDataWriter
-                from mineru.cli.common import prepare_env, read_fn, convert_pdf_bytes_to_bytes_by_pypdfium2
+                from mineru.cli.common import (
+                    prepare_env,
+                    read_fn,
+                    convert_pdf_bytes_to_bytes_by_pypdfium2,
+                )
 
                 # Store the imported functions for later use
                 self.pipeline_doc_analyze = pipeline_doc_analyze
                 self.pipeline_union_make = pipeline_union_make
-                self.pipeline_result_to_middle_json = pipeline_result_to_middle_json
+                self.pipeline_result_to_middle_json = (
+                    pipeline_result_to_middle_json
+                )
                 self.FileBasedDataWriter = FileBasedDataWriter
                 self.prepare_env = prepare_env
                 self.read_fn = read_fn
-                self.convert_pdf_bytes_to_bytes_by_pypdfium2 = convert_pdf_bytes_to_bytes_by_pypdfium2
+                self.convert_pdf_bytes_to_bytes_by_pypdfium2 = (
+                    convert_pdf_bytes_to_bytes_by_pypdfium2
+                )
 
             except ImportError as e:
                 print(f"✗ Required Mineru modules not available: {e}")
@@ -119,7 +137,7 @@ class MineruBackend(OCRBackend):
                 backend="mineru",
                 raw_result={"deepseek": "", "mineru": {}},
                 markdown="Model not loaded",
-                image_name=Path(image_path).name
+                image_name=Path(image_path).name,
             )
 
         start_time = time.time()
@@ -131,12 +149,16 @@ class MineruBackend(OCRBackend):
                 output_dir.mkdir(exist_ok=True)
 
                 # Process the image using Mineru pipeline
-                raw_output, markdown_result = self._process_with_mineru_pipeline(
-                    image_path, output_dir, **kwargs
+                raw_output, markdown_result = (
+                    self._process_with_mineru_pipeline(
+                        image_path, output_dir, **kwargs
+                    )
                 )
 
                 # Generate bounding boxes image (placeholder for now)
-                boxes_image = self._generate_boxes_image(Image.open(image_path), raw_output)
+                boxes_image = self._generate_boxes_image(
+                    Image.open(image_path), raw_output
+                )
 
                 processing_time = time.time() - start_time
 
@@ -148,7 +170,7 @@ class MineruBackend(OCRBackend):
                     source_markdown=markdown_result,
                     boxes_image=boxes_image,
                     processing_time=processing_time,
-                    image_name=Path(image_path).name
+                    image_name=Path(image_path).name,
                 )
 
         except Exception as e:
@@ -161,7 +183,7 @@ class MineruBackend(OCRBackend):
                 raw_result={"deepseek": "", "mineru": {}},
                 markdown=f"OCR processing failed: {str(e)}",
                 processing_time=processing_time,
-                image_name=Path(image_path).name
+                image_name=Path(image_path).name,
             )
 
     def ocr_pdf(self, pdf_path: str, **kwargs) -> Dict[str, Any]:
@@ -181,7 +203,7 @@ class MineruBackend(OCRBackend):
                 backend="mineru",
                 raw_result={"deepseek": "", "mineru": {}},
                 markdown="Model not loaded",
-                image_name=Path(pdf_path).name
+                image_name=Path(pdf_path).name,
             )
 
         start_time = time.time()
@@ -193,12 +215,16 @@ class MineruBackend(OCRBackend):
                 output_dir.mkdir(exist_ok=True)
 
                 # Process the PDF using Mineru pipeline
-                raw_output, markdown_result = self._process_with_mineru_pipeline(
-                    pdf_path, output_dir, **kwargs
+                raw_output, markdown_result = (
+                    self._process_with_mineru_pipeline(
+                        pdf_path, output_dir, **kwargs
+                    )
                 )
 
                 # Generate bounding boxes image (placeholder for now)
-                boxes_image = ""  # PDF bounding box visualization would be more complex
+                boxes_image = (
+                    ""  # PDF bounding box visualization would be more complex
+                )
 
                 processing_time = time.time() - start_time
 
@@ -210,7 +236,7 @@ class MineruBackend(OCRBackend):
                     source_markdown=markdown_result,
                     boxes_image=boxes_image,
                     processing_time=processing_time,
-                    image_name=Path(pdf_path).name
+                    image_name=Path(pdf_path).name,
                 )
 
         except Exception as e:
@@ -223,7 +249,7 @@ class MineruBackend(OCRBackend):
                 raw_result={"deepseek": "", "mineru": {}},
                 markdown=f"PDF processing failed: {str(e)}",
                 processing_time=processing_time,
-                image_name=Path(pdf_path).name
+                image_name=Path(pdf_path).name,
             )
 
     def get_health_status(self) -> Dict[str, Any]:
@@ -234,11 +260,15 @@ class MineruBackend(OCRBackend):
             dict: Health information including model_loaded, gpu_available, etc.
         """
         return {
-            "status": "healthy" if self.model_loaded and self.gpu_available else "unhealthy",
+            "status": (
+                "healthy"
+                if self.model_loaded and self.gpu_available
+                else "unhealthy"
+            ),
             "model_loaded": self.model_loaded,
             "gpu_available": self.gpu_available,
             "backend": "mineru",
-            "timestamp": time.time()
+            "timestamp": time.time(),
         }
 
     def cleanup(self):
@@ -257,7 +287,9 @@ class MineruBackend(OCRBackend):
         self.model_loaded = False
         print("Mineru backend resources cleaned up")
 
-    def _process_with_mineru_pipeline(self, file_path: str, output_dir: Path, **kwargs) -> tuple[Dict[str, Any], str]:
+    def _process_with_mineru_pipeline(
+        self, file_path: str, output_dir: Path, **kwargs
+    ) -> tuple[Dict[str, Any], str]:
         """
         Process file (image or PDF) using Mineru pipeline backend.
 
@@ -272,14 +304,18 @@ class MineruBackend(OCRBackend):
         try:
             # Prepare environment for Mineru processing
             file_name = Path(file_path).stem
-            local_image_dir, local_md_dir = self.prepare_env(output_dir, file_name, "auto")
-            image_writer, md_writer = self.FileBasedDataWriter(local_image_dir), self.FileBasedDataWriter(local_md_dir)
+            local_image_dir, local_md_dir = self.prepare_env(
+                output_dir, file_name, "auto"
+            )
+            image_writer, md_writer = self.FileBasedDataWriter(
+                local_image_dir
+            ), self.FileBasedDataWriter(local_md_dir)
 
             # Read file bytes
             file_bytes = self.read_fn(file_path)
 
             # Handle page selection for PDFs
-            selected_pages = kwargs.get('pages', None)
+            selected_pages = kwargs.get("pages", None)
             start_page_id = 0
             end_page_id = None
 
@@ -305,8 +341,8 @@ class MineruBackend(OCRBackend):
                 [file_bytes],
                 ["ch"],  # Default to Chinese, can be parameterized
                 parse_method="auto",
-                formula_enable,
-                table_enable,
+                formula_enable=True,
+                table_enable=True,
             )
 
             # Process the results
@@ -330,7 +366,9 @@ class MineruBackend(OCRBackend):
 
                 # Generate markdown content
                 image_dir = str(local_image_dir.name)
-                markdown_content = self.pipeline_union_make(middle_json["pdf_info"], "MM_MD", image_dir)
+                markdown_content = self.pipeline_union_make(
+                    middle_json["pdf_info"], "MM_MD", image_dir
+                )
 
                 # Prepare raw output
                 raw_output = {
@@ -340,8 +378,8 @@ class MineruBackend(OCRBackend):
                         "language": _lang,
                         "ocr_enabled": _ocr_enable,
                         "formula_enabled": True,
-                        "table_enabled": True
-                    }
+                        "table_enabled": True,
+                    },
                 }
 
                 return raw_output, markdown_content
@@ -353,7 +391,9 @@ class MineruBackend(OCRBackend):
             print(f"✗ Mineru pipeline processing failed: {e}")
             raise
 
-    def _generate_boxes_image(self, image: Image.Image, raw_output: Dict[str, Any]) -> str:
+    def _generate_boxes_image(
+        self, image: Image.Image, raw_output: Dict[str, Any]
+    ) -> str:
         """
         Generate base64-encoded image with bounding boxes.
 
@@ -371,3 +411,4 @@ class MineruBackend(OCRBackend):
         # For now, return empty string as bounding box visualization
         # would require more complex integration with Mineru's bbox drawing
         return ""
+
