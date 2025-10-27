@@ -305,8 +305,8 @@ class MineruBackend(OCRBackend):
                 [file_bytes],
                 ["ch"],  # Default to Chinese, can be parameterized
                 parse_method="auto",
-                formula_enable=True,
-                table_enable=True,
+                formula_enable,
+                table_enable,
             )
 
             # Process the results
@@ -325,7 +325,7 @@ class MineruBackend(OCRBackend):
                     image_writer,
                     _lang,
                     _ocr_enable,
-                    formula_enable=True,
+                    formula_enable,
                 )
 
                 # Generate markdown content
