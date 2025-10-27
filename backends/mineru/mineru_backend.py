@@ -388,6 +388,12 @@ class MineruBackend(OCRBackend):
                     middle_json["pdf_info"], self.MakeMode.MM_MD, image_dir
                 )
 
+                # Process markdown to convert image links to HTML img tags
+                markdown_content = self._convert_markdown_images_to_html(markdown_content, image_dir)
+
+                # Copy images to permanent location for serving
+                self._copy_images_to_serving_location(image_dir)
+
                 # Prepare raw output
                 raw_output = {
                     "middle_json": middle_json,
@@ -429,3 +435,85 @@ class MineruBackend(OCRBackend):
         # For now, return empty string as bounding box visualization
         # would require more complex integration with Mineru's bbox drawing
         return ""
+
+    def _convert_markdown_images_to_html(self, markdown_content: str, image_dir: str) -> str:
+        """
+        Convert markdown image links to HTML img tags for proper rendering.
+
+        Args:
+            markdown_content: Original markdown content with image links
+            image_dir: Directory where images are stored
+
+        Returns:
+            str: Processed markdown with HTML img tags
+        """
+        import re
+        import os
+        from pathlib import Path
+
+        if not markdown_content:
+            return markdown_content
+
+        print(f"🔍 DEBUG: Converting markdown images to HTML, image_dir: {image_dir}")
+
+        # Pattern to match markdown image syntax: ![alt](url)
+        pattern = r'!\[([^\]]*)\]\(([^\)]+)\)'
+
+        def replace_image_match(match):
+            alt_text = match.group(1)
+            image_url = match.group(2)
+
+            print(f"🔍 DEBUG: Found image: alt='{alt_text}', url='{image_url}'")
+
+            # Extract image filename from URL
+            image_filename = os.path.basename(image_url)
+
+            # Check if image file exists in the image directory
+            image_path = Path(image_dir) / image_filename
+            if image_path.exists():
+                # Create HTML img tag with server URL
+                img_tag = f'<img src="http://localhost:5001/images/{image_filename}" alt="{alt_text}" style="max-width: 100%; height: auto;">'
+                print(f"🔍 DEBUG: Converted to: {img_tag}")
+                return img_tag
+            else:
+                print(f"🔍 DEBUG: Image file not found: {image_path}")
+                return match.group(0)  # Return original if image not found
+
+        # Replace all markdown image links with HTML img tags
+        processed_content = re.sub(pattern, replace_image_match, markdown_content)
+
+        print(f"🔍 DEBUG: Image conversion completed. Original length: {len(markdown_content)}, Processed length: {len(processed_content)}")
+
+        return processed_content
+
+    def _copy_images_to_serving_location(self, image_dir: str):
+        """
+        Copy images from temporary processing directory to permanent serving location.
+
+        Args:
+            image_dir: Temporary directory where Mineru processed images are stored
+        """
+        import shutil
+        import os
+        from pathlib import Path
+
+        try:
+            # Create permanent serving directory
+            serving_dir = Path("outputs") / "images"
+            serving_dir.mkdir(parents=True, exist_ok=True)
+
+            print(f"🔍 DEBUG: Copying images from {image_dir} to {serving_dir}")
+
+            # Copy all image files from temporary directory to serving directory
+            temp_dir = Path(image_dir)
+            if temp_dir.exists():
+                for image_file in temp_dir.glob("*.*"):
+                    if image_file.is_file():
+                        dest_path = serving_dir / image_file.name
+                        shutil.copy2(image_file, dest_path)
+                        print(f"🔍 DEBUG: Copied {image_file.name} to serving location")
+            else:
+                print(f"🔍 DEBUG: Temporary image directory {image_dir} does not exist")
+
+        except Exception as e:
+            print(f"🔍 DEBUG: Error copying images to serving location: {e}")

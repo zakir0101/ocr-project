@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 
 const ResultCard = ({
@@ -8,6 +8,16 @@ const ResultCard = ({
   isComparisonMode = false
 }) => {
   const [activeTab, setActiveTab] = useState('rendered');
+
+  // Process MathJax when component mounts or activeTab changes
+  useEffect(() => {
+    if (window.MathJax && (activeTab === 'rendered' || activeTab === 'source')) {
+      // Give the DOM time to update, then process MathJax
+      setTimeout(() => {
+        window.MathJax.typesetPromise && window.MathJax.typesetPromise();
+      }, 100);
+    }
+  }, [activeTab, result]);
 
   if (!result) return null;
 

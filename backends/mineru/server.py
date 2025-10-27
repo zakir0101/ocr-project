@@ -14,7 +14,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from mineru_backend import MineruBackend
 
 # Initialize Flask app
@@ -72,6 +72,20 @@ def ocr_pdf():
             os.remove(temp_path)
         except:
             pass
+
+@app.route('/images/<image_id>', methods=['GET'])
+def serve_image(image_id):
+    """Serve images from Mineru processing"""
+    try:
+        # Mineru stores images in temporary directories
+        # For now, serve from a common images directory
+        image_path = Path("outputs") / "images" / f"{image_id}"
+        if image_path.exists():
+            return send_file(image_path, mimetype='image/jpeg')
+        else:
+            return jsonify({'error': 'Image not found'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/health', methods=['GET'])
 def health_check():
