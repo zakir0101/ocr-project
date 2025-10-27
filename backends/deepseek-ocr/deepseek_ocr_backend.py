@@ -725,6 +725,9 @@ class DeepSeekOCRBackend(OCRBackend):
         for a_match_other in matches_other:
             processed = processed.replace(a_match_other, '')
 
+        # Convert markdown image syntax to HTML img tags
+        processed = self._convert_markdown_images_to_html(processed)
+
         # Clean up extra whitespace but PRESERVE newlines for proper markdown rendering
         processed = re.sub(r'\n\s*\n', '\n\n', processed)
         processed = processed.strip()
@@ -947,6 +950,48 @@ class DeepSeekOCRBackend(OCRBackend):
         html_content = re.sub(r'\n', '<br>', html_content)
 
         return html_content
+
+    def _convert_markdown_images_to_html(self, markdown_content: str) -> str:
+        """
+        Convert markdown image links to HTML img tags for proper rendering.
+
+        Args:
+            markdown_content: Original markdown content with image links
+
+        Returns:
+            str: Processed markdown with HTML img tags
+        """
+        import re
+
+        if not markdown_content:
+            return markdown_content
+
+        print(f"🔍 DEBUG: Converting markdown images to HTML")
+
+        # Pattern to match markdown image syntax: ![alt](url)
+        pattern = r'!\[([^\]]*)\]\(([^\)]+)\)'
+
+        def replace_image_match(match):
+            alt_text = match.group(1)
+            image_url = match.group(2)
+
+            print(f"🔍 DEBUG: Found markdown image: alt='{alt_text}', url='{image_url}'")
+
+            # Extract image filename from URL
+            import os
+            image_filename = os.path.basename(image_url)
+
+            # Create HTML img tag with server URL
+            img_tag = f'<img src="http://localhost:5000/images/{image_filename}" alt="{alt_text}" style="max-width: 100%; height: auto;">'
+            print(f"🔍 DEBUG: Converted to: {img_tag}")
+            return img_tag
+
+        # Replace all markdown image links with HTML img tags
+        processed_content = re.sub(pattern, replace_image_match, markdown_content)
+
+        print(f"🔍 DEBUG: Markdown image conversion completed. Original length: {len(markdown_content)}, Processed length: {len(processed_content)}")
+
+        return processed_content
 
 
 # Flask server for DeepSeek backend
