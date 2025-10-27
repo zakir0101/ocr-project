@@ -306,9 +306,12 @@ class MineruBackend(OCRBackend):
         try:
             # Prepare environment for Mineru processing
             file_name = Path(file_path).stem
+            print(f"🔍 DEBUG: Calling prepare_env with output_dir={output_dir}, file_name={file_name}")
             local_image_dir, local_md_dir = self.prepare_env(
                 output_dir, file_name, "auto"
             )
+            print(f"🔍 DEBUG: prepare_env returned local_image_dir={local_image_dir} (type: {type(local_image_dir)})")
+            print(f"🔍 DEBUG: prepare_env returned local_md_dir={local_md_dir} (type: {type(local_md_dir)})")
             image_writer, md_writer = self.FileBasedDataWriter(
                 local_image_dir
             ), self.FileBasedDataWriter(local_md_dir)
@@ -367,7 +370,10 @@ class MineruBackend(OCRBackend):
                 )
 
                 # Generate markdown content
-                image_dir = str(local_image_dir.name)
+                print(f"🔍 DEBUG: Before image_dir assignment, local_image_dir={local_image_dir} (type: {type(local_image_dir)})")
+                # FIX: local_image_dir is already a string path, no need for .name
+                image_dir = str(local_image_dir)
+                print(f"🔍 DEBUG: Using image_dir={image_dir}")
                 markdown_content = self.pipeline_union_make(
                     middle_json["pdf_info"], "MM_MD", image_dir
                 )
