@@ -199,6 +199,7 @@ class DeepSeekOCRBackend(OCRBackend):
 
             # Extract markdown and bounding boxes
             markdown_result = self._extract_markdown_from_output(raw_output)
+            source_markdown_result = self._extract_source_markdown_from_output(raw_output)
             boxes_image = self._generate_boxes_image(image, raw_output)
 
             processing_time = time.time() - start_time
@@ -211,7 +212,7 @@ class DeepSeekOCRBackend(OCRBackend):
                 backend="deepseek-ocr",
                 raw_result={"deepseek": raw_output, "mineru": {}},
                 markdown=markdown_result,
-                source_markdown=markdown_result,
+                source_markdown=source_markdown_result,
                 boxes_image=boxes_image,
                 processing_time=processing_time,
                 image_name=Path(image_path).name,
@@ -552,6 +553,7 @@ class DeepSeekOCRBackend(OCRBackend):
     def _extract_markdown_from_output(self, raw_output: str) -> str:
         """
         Extract markdown text from DeepSeek raw output.
+        Matches reference implementation: remove all <|ref|> and <|det|> tags
 
         Args:
             raw_output: Raw OCR output from DeepSeek
@@ -568,33 +570,65 @@ class DeepSeekOCRBackend(OCRBackend):
             print("🔍 DEBUG: Raw output is empty, returning empty string")
             return ""
 
-        # Extract text between <|ref|> and <|/ref|> markers (excluding image references)
-        pattern = r"<\|ref\|>(?!image)(.*?)<\|/ref\|>"
-        matches = re.findall(pattern, raw_output, re.DOTALL)
-
-        print(f"🔍 DEBUG: Found {len(matches)} matches with pattern: {pattern}")
-        for i, match in enumerate(matches):
-            print(f"🔍 DEBUG: Match {i}: '{match[:100]}...'")
-
-        # Combine all text matches
-        markdown_text = "\n\n".join(
-            [match.strip() for match in matches if match.strip()]
-        )
-
-        print(f"🔍 DEBUG: Combined markdown text length: {len(markdown_text)}")
-        print(f"🔍 DEBUG: Markdown text preview: '{markdown_text[:200]}...'")
+        # Process OCR output like reference implementation: remove all <|ref|> and <|det|> tags
+        processed = re.sub(r'<\|ref\|>.*?<\|/ref\|>', '', raw_output)
+        processed = re.sub(r'<\|det\|>.*?<\|/det\|>', '', processed)
 
         # Clean up extra whitespace
-        markdown_text = re.sub(r"\n\s*\n", "\n\n", markdown_text)
-        markdown_text = markdown_text.strip()
+        processed = re.sub(r'\n\s*\n', '\n\n', processed)  # Multiple newlines to double newlines
+        processed = processed.strip()
+
+        print(f"🔍 DEBUG: Processed markdown text length: {len(processed)}")
+        print(f"🔍 DEBUG: Markdown text preview: '{processed[:200]}...'")
 
         final_result = (
-            markdown_text
-            if markdown_text
+            processed
+            if processed
             else "No text extracted from OCR output"
         )
 
         print(f"🔍 DEBUG: Final markdown result: '{final_result}'")
+        return final_result
+
+    def _extract_source_markdown_from_output(self, raw_output: str) -> str:
+        """
+        Extract source markdown for rendering - preserves HTML tables and formatting
+        Matches reference implementation's process_ocr_for_rendering function
+
+        Args:
+            raw_output: Raw OCR output from DeepSeek
+
+        Returns:
+            str: Processed source markdown with HTML preserved
+        """
+        import re
+
+        print(f"🔍 DEBUG: Starting source markdown extraction from raw output")
+        print(f"🔍 DEBUG: Raw output length: {len(raw_output) if raw_output else 0}")
+
+        if not raw_output:
+            print("🔍 DEBUG: Raw output is empty, returning empty string")
+            return ""
+
+        # Process OCR output for rendering like reference implementation
+        # Remove all <|ref|> and <|det|> tags while preserving the content
+        processed = re.sub(r'<\|ref\|>.*?<\|/ref\|>', '', raw_output)
+        processed = re.sub(r'<\|det\|>.*?<\|/det\|>', '', processed)
+
+        # Clean up extra whitespace
+        processed = re.sub(r'\n\s*\n', '\n\n', processed)
+        processed = processed.strip()
+
+        print(f"🔍 DEBUG: Processed source markdown text length: {len(processed)}")
+        print(f"🔍 DEBUG: Source markdown text preview: '{processed[:200]}...'")
+
+        final_result = (
+            processed
+            if processed
+            else "No text extracted from OCR output"
+        )
+
+        print(f"🔍 DEBUG: Final source markdown result: '{final_result}'")
         return final_result
 
     def _generate_boxes_image(
