@@ -322,6 +322,7 @@ class DeepSeekOCRBackend(OCRBackend):
     ) -> Tuple[Dict[str, Any], str]:
         """
         Process PDF using optimized DeepSeek approach with parallel page processing.
+        Based on official DeepSeek PDF processing implementation.
 
         Args:
             pdf_path: Path to PDF file
@@ -333,49 +334,20 @@ class DeepSeekOCRBackend(OCRBackend):
         import fitz
         import io
         from concurrent.futures import ThreadPoolExecutor
-        from tqdm import tqdm
 
         try:
-            # Open PDF document
-            doc = fitz.open(pdf_path)
+            # Convert PDF to high-quality images (144 DPI like official code)
+            images = self._pdf_to_images_high_quality(pdf_path, selected_pages)
 
-            # Determine pages to process
-            if selected_pages is None:
-                pages_to_process = list(range(len(doc)))
-            else:
-                # Convert to 0-indexed and validate
-                pages_to_process = [
-                    p - 1 for p in selected_pages if 1 <= p <= len(doc)
-                ]
-
-            if not pages_to_process:
+            if not images:
                 raise ValueError("No valid pages selected for processing")
-
-            # Convert PDF pages to high-quality images
-            images = []
-            zoom = 144 / 72.0  # 144 DPI
-            matrix = fitz.Matrix(zoom, zoom)
-
-            for page_idx in pages_to_process:
-                page = doc[page_idx]
-                pixmap = page.get_pixmap(matrix=matrix, alpha=False)
-                img_data = pixmap.tobytes("png")
-                img = Image.open(io.BytesIO(img_data))
-                # Convert to RGB to ensure 3 channels (remove alpha channel if present)
-                if img.mode in ('RGBA', 'LA', 'P'):
-                    img = img.convert('RGB')
-                elif img.mode != 'RGB':
-                    img = img.convert('RGB')
-                images.append(img)
-
-            doc.close()
 
             # Process images in parallel using ThreadPoolExecutor
             batch_inputs = []
             with ThreadPoolExecutor(
                 max_workers=min(len(images), 4)
             ) as executor:
-                # Prepare batch inputs
+                # Prepare batch inputs using official approach
                 for image in images:
                     from process.image_process import DeepseekOCRProcessor
 
@@ -392,49 +364,70 @@ class DeepSeekOCRBackend(OCRBackend):
                     }
                     batch_inputs.append(cache_item)
 
-            # Generate OCR results for all pages
+            # Generate OCR results for all pages using official sampling parameters
             from vllm import SamplingParams
             from process.ngram_norepeat import NoRepeatNGramLogitsProcessor
 
             sampling_params = SamplingParams(
                 temperature=0.0,
-                top_p=1.0,
-                max_tokens=4096,
+                max_tokens=8192,  # Official uses 8192
                 logits_processors=[NoRepeatNGramLogitsProcessor(
-                    ngram_size=30,
-                    window_size=90,
+                    ngram_size=20,  # Official uses 20 for PDF
+                    window_size=50,  # Official uses 50 for PDF
                     whitelist_token_ids={128821, 128822}
                 )],
-                skip_special_tokens=False
+                skip_special_tokens=False,
+                include_stop_str_in_output=True,  # Official includes this
             )
+
+            # Use synchronous generation for PDF processing like official code
             outputs_list = self.engine.generate(
                 batch_inputs, sampling_params=sampling_params
             )
 
-            # Combine results from all pages
-            all_contents = []
+            # Process results using official approach
+            contents_det = ''
+            contents = ''
             raw_outputs = []
 
-            for output, page_num in zip(outputs_list, pages_to_process):
+            for jdx, (output, img) in enumerate(zip(outputs_list, images)):
                 content = output.outputs[0].text
 
-                # Clean up the output
-                if "<|endoftext|>" in content:
-                    content = content.replace("<|endoftext|>", "")
+                # Clean up the output like official code
+                if '<|endoftext|>' in content:
+                    content = content.replace('<|endoftext|>', '')
 
-                # Add page separator
-                page_separator = f"\n<--- Page {page_num + 1} --->\n"
-                all_contents.append(content + page_separator)
-                raw_outputs.append(
-                    {"page": page_num + 1, "raw_output": content}
-                )
+                # Add page separator like official code
+                page_separator = f'\n<--- Page Split --->\n'
+                contents_det += content + page_separator
 
-            # Combine all page results
-            markdown_content = "\n".join(all_contents)
+                # Process image references like official code
+                matches_ref, matches_images, matches_other = self._re_match(content)
+
+                # Replace image references with markdown links
+                for idx, a_match_image in enumerate(matches_images):
+                    content = content.replace(a_match_image, f'![](images/{jdx}_{idx}.jpg)\n')
+
+                # Remove other <|ref|> tags and clean up
+                for a_match_other in matches_other:
+                    content = content.replace(a_match_other, '').replace('\\coloneqq', ':=').replace('\\eqqcolon', '=:').replace('\n\n\n\n', '\n\n').replace('\n\n\n', '\n\n')
+
+                contents += content + page_separator
+                raw_outputs.append({
+                    "page": jdx + 1,
+                    "raw_output": content,
+                    "matches_ref": matches_ref,
+                    "matches_images": matches_images,
+                    "matches_other": matches_other
+                })
+
+            # Use the cleaned content for markdown
+            markdown_content = contents
             raw_output = {
                 "pages": raw_outputs,
-                "total_pages": len(pages_to_process),
-                "processed_pages": [p + 1 for p in pages_to_process],
+                "total_pages": len(images),
+                "processed_pages": list(range(1, len(images) + 1)),
+                "contents_det": contents_det,
             }
 
             return raw_output, markdown_content
@@ -442,6 +435,63 @@ class DeepSeekOCRBackend(OCRBackend):
         except Exception as e:
             print(f"Error in PDF processing: {e}")
             raise
+
+    def _pdf_to_images_high_quality(self, pdf_path: str, selected_pages: List[int] = None, dpi: int = 144):
+        """
+        Convert PDF to high-quality images using official approach.
+
+        Args:
+            pdf_path: Path to PDF file
+            selected_pages: List of page numbers to process (1-indexed)
+            dpi: DPI for conversion (default 144 like official code)
+
+        Returns:
+            List of PIL Image objects
+        """
+        import fitz
+        import io
+
+        images = []
+
+        pdf_document = fitz.open(pdf_path)
+
+        # Determine pages to process
+        if selected_pages is None:
+            pages_to_process = list(range(pdf_document.page_count))
+        else:
+            # Convert to 0-indexed and validate
+            pages_to_process = [
+                p - 1 for p in selected_pages if 1 <= p <= pdf_document.page_count
+            ]
+
+        if not pages_to_process:
+            pdf_document.close()
+            return images
+
+        zoom = dpi / 72.0
+        matrix = fitz.Matrix(zoom, zoom)
+
+        for page_num in pages_to_process:
+            page = pdf_document[page_num]
+
+            pixmap = page.get_pixmap(matrix=matrix, alpha=False)
+            Image.MAX_IMAGE_PIXELS = None
+
+            img_data = pixmap.tobytes("png")
+            img = Image.open(io.BytesIO(img_data))
+
+            # Convert to RGB like official code
+            if img.mode in ('RGBA', 'LA'):
+                background = Image.new('RGB', img.size, (255, 255, 255))
+                background.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
+                img = background
+            elif img.mode != 'RGB':
+                img = img.convert('RGB')
+
+            images.append(img)
+
+        pdf_document.close()
+        return images
 
     def cleanup(self):
         """
