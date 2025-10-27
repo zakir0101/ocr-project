@@ -115,8 +115,10 @@ class DeepSeekOCRBackend(OCRBackend):
                 tokenizer=str(self.model_path),
                 tensor_parallel_size=1,
                 dtype="bfloat16",
-                gpu_memory_utilization=0.9,
+                gpu_memory_utilization=0.75,
                 max_model_len=8192,
+                block_size=256,
+                enforce_eager=False,
                 enable_chunked_prefill=True,
                 max_num_batched_tokens=8192,
                 max_num_seqs=16,
@@ -503,14 +505,24 @@ class DeepSeekOCRBackend(OCRBackend):
             # Generate OCR output using vLLM engine - EXACTLY like reference
             request_id = f"ocr_{int(time.time())}"
 
+            # Accumulate output like reference implementation
+            printed_length = 0
+            final_output = ""
+
             async for request_output in self.engine.generate(
                 request, sampling_params=sampling_params, request_id=request_id
             ):
                 if request_output.outputs:
                     full_text = request_output.outputs[0].text
-                    return full_text
+                    # Stream the output like official code
+                    new_text = full_text[printed_length:]
+                    if new_text:
+                        print(new_text, end='', flush=True)
+                    printed_length = len(full_text)
+                    final_output = full_text
 
-            return ""
+            print('\n')  # New line after generation completes
+            return final_output
 
         try:
             print(f"🔍 DEBUG: Starting DeepSeek OCR processing for image: {image.size}")
