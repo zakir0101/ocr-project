@@ -176,13 +176,21 @@ class DeepSeekOCRBackend(OCRBackend):
         start_time = time.time()
 
         try:
+            print(f"🔍 DEBUG: Starting OCR processing for image: {image_path}")
+
             # Load and process image - ensure RGB format
             image = Image.open(image_path)
+            print(f"🔍 DEBUG: Original image mode: {image.mode}, size: {image.size}")
+
             # Convert to RGB to ensure 3 channels (remove alpha channel if present)
             if image.mode in ('RGBA', 'LA', 'P'):
                 image = image.convert('RGB')
+                print(f"🔍 DEBUG: Converted image from {image.mode} to RGB")
             elif image.mode != 'RGB':
                 image = image.convert('RGB')
+                print(f"🔍 DEBUG: Converted image from {image.mode} to RGB")
+            else:
+                print(f"🔍 DEBUG: Image already in RGB format")
 
             # Process image through DeepSeek OCR
             raw_output = self._process_image_with_deepseek(image, **kwargs)
@@ -192,6 +200,9 @@ class DeepSeekOCRBackend(OCRBackend):
             boxes_image = self._generate_boxes_image(image, raw_output)
 
             processing_time = time.time() - start_time
+
+            print(f"🔍 DEBUG: OCR processing completed in {processing_time:.2f}s")
+            print(f"🔍 DEBUG: Final markdown result length: {len(markdown_result)}")
 
             return create_unified_response(
                 success=True,
@@ -492,10 +503,21 @@ class DeepSeekOCRBackend(OCRBackend):
             return ""
 
         try:
+            print(f"🔍 DEBUG: Starting DeepSeek OCR processing for image: {image.size}")
+            print(f"🔍 DEBUG: Using prompt: {DEEPSEEK_PROMPT}")
+
             # Run async generation with timeout
             final_output = asyncio.run(
                 asyncio.wait_for(generate_ocr(), timeout=120.0)
             )
+
+            print(f"🔍 DEBUG: Raw OCR output received, length: {len(final_output) if final_output else 0}")
+            if final_output:
+                print(f"🔍 DEBUG: First 500 chars of raw output: {final_output[:500]}")
+                print(f"🔍 DEBUG: Last 500 chars of raw output: {final_output[-500:]}")
+            else:
+                print("🔍 DEBUG: Raw OCR output is EMPTY")
+
             return final_output
 
         except asyncio.TimeoutError:
@@ -517,27 +539,41 @@ class DeepSeekOCRBackend(OCRBackend):
         """
         import re
 
+        print(f"🔍 DEBUG: Starting markdown extraction from raw output")
+        print(f"🔍 DEBUG: Raw output length: {len(raw_output) if raw_output else 0}")
+
         if not raw_output:
+            print("🔍 DEBUG: Raw output is empty, returning empty string")
             return ""
 
         # Extract text between <|ref|> and <|/ref|> markers (excluding image references)
         pattern = r"<\|ref\|>(?!image)(.*?)<\|/ref\|>"
         matches = re.findall(pattern, raw_output, re.DOTALL)
 
+        print(f"🔍 DEBUG: Found {len(matches)} matches with pattern: {pattern}")
+        for i, match in enumerate(matches):
+            print(f"🔍 DEBUG: Match {i}: '{match[:100]}...'")
+
         # Combine all text matches
         markdown_text = "\n\n".join(
             [match.strip() for match in matches if match.strip()]
         )
 
+        print(f"🔍 DEBUG: Combined markdown text length: {len(markdown_text)}")
+        print(f"🔍 DEBUG: Markdown text preview: '{markdown_text[:200]}...'")
+
         # Clean up extra whitespace
         markdown_text = re.sub(r"\n\s*\n", "\n\n", markdown_text)
         markdown_text = markdown_text.strip()
 
-        return (
+        final_result = (
             markdown_text
             if markdown_text
             else "No text extracted from OCR output"
         )
+
+        print(f"🔍 DEBUG: Final markdown result: '{final_result}'")
+        return final_result
 
     def _generate_boxes_image(
         self, image: Image.Image, raw_output: str
