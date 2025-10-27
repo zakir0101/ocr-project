@@ -59,11 +59,11 @@ const ResultCard = ({
             {activeTab === 'rendered' ? (
               <div
                 className="markdown-content"
-                dangerouslySetInnerHTML={{ __html: result.source_markdown || result.markdown }}
+                dangerouslySetInnerHTML={{ __html: result.markdown || result.source_markdown }}
               />
             ) : activeTab === 'source' ? (
               <div className="markdown-source">
-                <ReactMarkdown>{result.markdown}</ReactMarkdown>
+                <ReactMarkdown>{result.source_markdown || result.markdown}</ReactMarkdown>
               </div>
             ) : (
               <div className="markdown-raw">

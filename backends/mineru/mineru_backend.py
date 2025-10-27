@@ -230,8 +230,8 @@ class MineruBackend(OCRBackend):
                     ""  # PDF bounding box visualization would be more complex
                 )
 
-                # Create proper RENDERED output with line breaks
-                rendered_output = self._fix_line_breaks(markdown_result)
+                # Create proper RENDERED output - use same approach as image processing
+                rendered_output = markdown_result
 
                 processing_time = time.time() - start_time
 
