@@ -153,7 +153,7 @@ class MineruBackend(OCRBackend):
                 output_dir.mkdir(exist_ok=True)
 
                 # Process the image using Mineru pipeline
-                raw_output, markdown_result = (
+                raw_output, rendered_html = (
                     self._process_with_mineru_pipeline(
                         image_path, output_dir, **kwargs
                     )
@@ -169,8 +169,8 @@ class MineruBackend(OCRBackend):
                 return create_unified_response(
                     success=True,
                     backend="mineru",
-                    raw_result=raw_output,
-                    rendered_html=markdown_result,
+                    raw_result=raw_output,  # Direct Mineru output, not combined format
+                    rendered_html=rendered_html,
                     boxes_image=boxes_image,
                     processing_time=processing_time,
                     image_name=Path(image_path).name,
@@ -218,7 +218,7 @@ class MineruBackend(OCRBackend):
                 output_dir.mkdir(exist_ok=True)
 
                 # Process the PDF using Mineru pipeline
-                raw_output, markdown_result = (
+                raw_output, rendered_html = (
                     self._process_with_mineru_pipeline(
                         pdf_path, output_dir, **kwargs
                     )
@@ -234,8 +234,8 @@ class MineruBackend(OCRBackend):
                 return create_unified_response(
                     success=True,
                     backend="mineru",
-                    raw_result=raw_output,
-                    rendered_html=markdown_result,
+                    raw_result=raw_output,  # Direct Mineru output, not combined format
+                    rendered_html=rendered_html,
                     boxes_image=boxes_image,
                     processing_time=processing_time,
                     image_name=Path(pdf_path).name,
@@ -387,13 +387,13 @@ class MineruBackend(OCRBackend):
                 )
 
                 # Process markdown to convert image links to HTML img tags
-                markdown_content = self._convert_markdown_images_to_html(markdown_content, image_dir)
+                rendered_html = self._convert_markdown_images_to_html(markdown_content, image_dir)
 
                 # Fix line breaks - ensure proper paragraph spacing
-                markdown_content = self._fix_line_breaks(markdown_content)
+                rendered_html = self._fix_line_breaks(rendered_html)
 
                 # Add HTML line breaks for rendered output
-                markdown_content = self._add_line_breaks_to_html(markdown_content)
+                rendered_html = self._add_line_breaks_to_html(rendered_html)
 
                 # Copy images to permanent location for serving
                 self._copy_images_to_serving_location(image_dir)
@@ -410,7 +410,7 @@ class MineruBackend(OCRBackend):
                     },
                 }
 
-                return raw_output, markdown_content
+                return raw_output, rendered_html
 
             else:
                 raise Exception("No inference results from Mineru")

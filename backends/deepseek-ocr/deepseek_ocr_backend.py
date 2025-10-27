@@ -951,6 +951,62 @@ class DeepSeekOCRBackend(OCRBackend):
 
         return html_content
 
+    def _process_ocr_for_rendering(self, raw_text: str) -> str:
+        """
+        Process OCR output specifically for rendered HTML view
+        This version preserves image references with proper <img> tags and handles line breaks
+        EXACTLY matches reference implementation from vast_server.py
+
+        Args:
+            raw_text: Raw OCR output from DeepSeek
+
+        Returns:
+            str: Processed HTML for rendering
+        """
+        import re
+
+        print(f"🔍 DEBUG: Starting process_ocr_for_rendering")
+        print(f"🔍 DEBUG: Raw text length: {len(raw_text) if raw_text else 0}")
+
+        # Extract image references using official implementation
+        matches_ref, matches_images, matches_other = self._re_match(raw_text)
+
+        # Start with the raw text
+        processed = raw_text
+
+        # Replace image references with proper HTML <img> tags
+        for idx, a_match_image in enumerate(matches_images):
+            # Extract coordinates from the image reference
+            result = self._extract_coordinates_and_label(a_match_image, 1000, 1000)  # Use dummy dimensions for calculation
+            if result:
+                label_type, coords_list = result
+                if label_type == 'image' and coords_list:
+                    # Get the first bounding box coordinates
+                    x1, y1, x2, y2 = coords_list[0]
+                    # Calculate width and height from coordinates
+                    width = x2 - x1
+                    height = y2 - y1
+                    # Create proper HTML img tag with server URL and dimensions
+                    img_tag = f'<img src="http://localhost:5000/images/{idx}.jpg" width="{width}" height="{height}" alt="Extracted image"><br>'
+                    processed = processed.replace(a_match_image, img_tag)
+
+        # Remove other <|ref|> and <|det|> tags (non-image)
+        for a_match_other in matches_other:
+            processed = processed.replace(a_match_other, '')
+
+        # Clean up extra whitespace and handle line breaks for HTML rendering
+        processed = re.sub(r'\n\s*\n', '\n\n', processed)
+
+        # Convert newlines to <br> tags for proper HTML rendering
+        processed = processed.replace('\n', '<br>')
+
+        processed = processed.strip()
+
+        print(f"🔍 DEBUG: Processed HTML length: {len(processed)}")
+        print(f"🔍 DEBUG: Processed HTML preview: '{processed[:200]}...'")
+
+        return processed
+
     def _convert_markdown_images_to_html(self, markdown_content: str) -> str:
         """
         Convert markdown image links to HTML img tags for proper rendering.
