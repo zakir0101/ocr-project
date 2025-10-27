@@ -109,6 +109,7 @@ class MineruBackend(OCRBackend):
                 self.convert_pdf_bytes_to_bytes_by_pypdfium2 = (
                     convert_pdf_bytes_to_bytes_by_pypdfium2
                 )
+                self.MakeMode = MakeMode
 
             except ImportError as e:
                 print(f"✗ Required Mineru modules not available: {e}")
@@ -307,12 +308,18 @@ class MineruBackend(OCRBackend):
         try:
             # Prepare environment for Mineru processing
             file_name = Path(file_path).stem
-            print(f"🔍 DEBUG: Calling prepare_env with output_dir={output_dir}, file_name={file_name}")
+            print(
+                f"🔍 DEBUG: Calling prepare_env with output_dir={output_dir}, file_name={file_name}"
+            )
             local_image_dir, local_md_dir = self.prepare_env(
                 output_dir, file_name, "auto"
             )
-            print(f"🔍 DEBUG: prepare_env returned local_image_dir={local_image_dir} (type: {type(local_image_dir)})")
-            print(f"🔍 DEBUG: prepare_env returned local_md_dir={local_md_dir} (type: {type(local_md_dir)})")
+            print(
+                f"🔍 DEBUG: prepare_env returned local_image_dir={local_image_dir} (type: {type(local_image_dir)})"
+            )
+            print(
+                f"🔍 DEBUG: prepare_env returned local_md_dir={local_md_dir} (type: {type(local_md_dir)})"
+            )
             image_writer, md_writer = self.FileBasedDataWriter(
                 local_image_dir
             ), self.FileBasedDataWriter(local_md_dir)
@@ -371,12 +378,14 @@ class MineruBackend(OCRBackend):
                 )
 
                 # Generate markdown content
-                print(f"🔍 DEBUG: Before image_dir assignment, local_image_dir={local_image_dir} (type: {type(local_image_dir)})")
+                print(
+                    f"🔍 DEBUG: Before image_dir assignment, local_image_dir={local_image_dir} (type: {type(local_image_dir)})"
+                )
                 # FIX: local_image_dir is already a string path, no need for .name
                 image_dir = str(local_image_dir)
                 print(f"🔍 DEBUG: Using image_dir={image_dir}")
                 markdown_content = self.pipeline_union_make(
-                    middle_json["pdf_info"], MakeMode.MM_MD, image_dir
+                    middle_json["pdf_info"], self.MakeMode.MM_MD, image_dir
                 )
 
                 # Prepare raw output
@@ -420,4 +429,3 @@ class MineruBackend(OCRBackend):
         # For now, return empty string as bounding box visualization
         # would require more complex integration with Mineru's bbox drawing
         return ""
-
