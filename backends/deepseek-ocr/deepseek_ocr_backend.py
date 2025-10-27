@@ -673,19 +673,15 @@ class DeepSeekOCRBackend(OCRBackend):
                     width = x2 - x1
                     height = y2 - y1
                     # Create proper HTML img tag with server URL and dimensions
-                    img_tag = f'<img src="http://localhost:5000/images/{idx}.jpg" width="{width}" height="{height}" alt="Extracted image"><br>'
+                    img_tag = f'<img src="http://localhost:5000/images/{idx}.jpg" width="{width}" height="{height}" alt="Extracted image">'
                     processed = processed.replace(a_match_image, img_tag)
 
         # Remove other <|ref|> and <|det|> tags (non-image)
         for a_match_other in matches_other:
             processed = processed.replace(a_match_other, '')
 
-        # Clean up extra whitespace and handle line breaks for HTML rendering
+        # Clean up extra whitespace but PRESERVE newlines for proper markdown rendering
         processed = re.sub(r'\n\s*\n', '\n\n', processed)
-
-        # Convert newlines to <br> tags for proper HTML rendering
-        processed = processed.replace('\n', '<br>')
-
         processed = processed.strip()
 
         print(f"🔍 DEBUG: Processed source markdown text length: {len(processed)}")
