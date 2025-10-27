@@ -230,8 +230,8 @@ class MineruBackend(OCRBackend):
                     ""  # PDF bounding box visualization would be more complex
                 )
 
-                # Create proper source markdown with line breaks for rendering
-                source_markdown_result = self._fix_line_breaks(markdown_result)
+                # Create proper RENDERED output with line breaks
+                rendered_output = self._fix_line_breaks(markdown_result)
 
                 processing_time = time.time() - start_time
 
@@ -239,8 +239,8 @@ class MineruBackend(OCRBackend):
                     success=True,
                     backend="mineru",
                     raw_result={"deepseek": "", "mineru": raw_output},
-                    markdown=markdown_result,
-                    source_markdown=source_markdown_result,
+                    markdown=rendered_output,  # This is the RENDERED output
+                    source_markdown=markdown_result,  # This is the SOURCE markdown
                     boxes_image=boxes_image,
                     processing_time=processing_time,
                     image_name=Path(pdf_path).name,

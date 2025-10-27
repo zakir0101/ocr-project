@@ -267,8 +267,8 @@ class DeepSeekOCRBackend(OCRBackend):
                 ""  # PDF bounding box visualization would be more complex
             )
 
-            # Create proper source markdown with HTML rendering for PDF
-            source_markdown_result = self._extract_source_markdown_from_output(markdown_result)
+            # Create proper RENDERED output with HTML rendering for PDF
+            rendered_output = self._extract_source_markdown_from_output(markdown_result)
 
             processing_time = time.time() - start_time
 
@@ -276,8 +276,8 @@ class DeepSeekOCRBackend(OCRBackend):
                 success=True,
                 backend="deepseek-ocr",
                 raw_result={"deepseek": raw_output, "mineru": {}},
-                markdown=markdown_result,
-                source_markdown=source_markdown_result,
+                markdown=rendered_output,  # This is the RENDERED output
+                source_markdown=markdown_result,  # This is the SOURCE markdown
                 boxes_image=boxes_image,
                 processing_time=processing_time,
                 image_name=Path(pdf_path).name,
