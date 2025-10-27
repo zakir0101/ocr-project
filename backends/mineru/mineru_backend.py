@@ -391,6 +391,9 @@ class MineruBackend(OCRBackend):
                 # Process markdown to convert image links to HTML img tags
                 markdown_content = self._convert_markdown_images_to_html(markdown_content, image_dir)
 
+                # Fix line breaks - ensure proper paragraph spacing
+                markdown_content = self._fix_line_breaks(markdown_content)
+
                 # Copy images to permanent location for serving
                 self._copy_images_to_serving_location(image_dir)
 
@@ -485,6 +488,34 @@ class MineruBackend(OCRBackend):
         print(f"🔍 DEBUG: Image conversion completed. Original length: {len(markdown_content)}, Processed length: {len(processed_content)}")
 
         return processed_content
+
+    def _fix_line_breaks(self, markdown_content: str) -> str:
+        """
+        Fix line breaks in markdown content to ensure proper paragraph spacing.
+
+        Args:
+            markdown_content: Original markdown content
+
+        Returns:
+            str: Markdown content with proper line breaks
+        """
+        import re
+
+        if not markdown_content:
+            return markdown_content
+
+        # Ensure proper spacing between paragraphs
+        # Replace multiple newlines with exactly two newlines (standard markdown paragraph separation)
+        markdown_content = re.sub(r'\n{3,}', '\n\n', markdown_content)
+
+        # Ensure single newlines at the end of paragraphs are preserved
+        # This helps maintain the structure while preventing excessive spacing
+        markdown_content = re.sub(r'(?<!\n)\n(?!\n)', '\n\n', markdown_content)
+
+        # Clean up any remaining spacing issues
+        markdown_content = markdown_content.strip()
+
+        return markdown_content
 
     def _copy_images_to_serving_location(self, image_dir: str):
         """
