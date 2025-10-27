@@ -25,6 +25,8 @@ from shared.api_contract import create_unified_response
 MINERU_PROMPT = (
     "Extract text from this document and convert to markdown format."
 )
+formula_enable = True
+table_enable = True
 
 
 class MineruBackend(OCRBackend):
@@ -341,8 +343,8 @@ class MineruBackend(OCRBackend):
                 [file_bytes],
                 ["ch"],  # Default to Chinese, can be parameterized
                 parse_method="auto",
-                formula_enable=True,
-                table_enable=True,
+                formula_enable=formula_enable,
+                table_enable=table_enable,
             )
 
             # Process the results
