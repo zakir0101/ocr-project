@@ -12,6 +12,11 @@ import config, {
   getComparisonBackends
 } from './config'
 
+// Import modular components
+import FileUpload from './components/FileUpload'
+import ResultDisplay from './components/ResultDisplay'
+import ComparisonDisplay from './components/ComparisonDisplay'
+
 // PDF.js imports
 import * as pdfjsLib from 'pdfjs-dist'
 
@@ -26,7 +31,6 @@ function App() {
   const [result, setResult] = useState(null)
   const [comparisonResults, setComparisonResults] = useState({})
   const [error, setError] = useState('')
-  const [activeTab, setActiveTab] = useState('rendered')
   const [isDragOver, setIsDragOver] = useState(false)
   const [serverStatus, setServerStatus] = useState('checking')
   const [selectedBackend, setSelectedBackend] = useState(getDefaultBackend())
@@ -202,13 +206,13 @@ function App() {
 
   // Process MathJax equations when result changes
   useEffect(() => {
-    if (result && activeTab === 'rendered' && window.MathJax) {
+    if (result && window.MathJax) {
       // Give the DOM time to update, then process MathJax
       setTimeout(() => {
         window.MathJax.typesetPromise && window.MathJax.typesetPromise();
       }, 100)
     }
-  }, [result, activeTab])
+  }, [result])
 
   const checkServerStatus = async () => {
     try {
@@ -242,7 +246,6 @@ function App() {
       setServerStatus('disconnected')
     }
   }
-
 
   const processOCR = async () => {
     if (!selectedFile) {
@@ -350,7 +353,6 @@ function App() {
     setResult(null)
     setComparisonResults({})
     setError('')
-    setActiveTab('rendered')
     setSelectedBackend(getDefaultBackend())
     setUploadProgress(0)
     setIsGeneratingPreview(false)
@@ -433,7 +435,6 @@ function App() {
             </button>
           </div>
 
-
           {result?.demo_mode && (
             <div className="demo-notice">
               ⚠ Running in demo mode - install vLLM for full functionality
@@ -443,154 +444,30 @@ function App() {
 
       </div>
 
-      {!result && (
-        <div className="upload-section">
-          <div
-            className={`upload-area ${isDragOver ? 'drag-over' : ''}`}
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onClick={() => document.getElementById('file-input').click()}
-          >
-            <Upload className="upload-icon" />
-            <h3>Drag & Drop Image or PDF Here</h3>
-            <p>or click to select a file</p>
-            <p style={{ fontSize: '14px', color: '#666', marginTop: '10px' }}>
-              Supported formats: JPEG, PNG, WebP, PDF (up to 50MB)
-            </p>
-
-            {/* Progress indicator for PDF preview generation */}
-            {isGeneratingPreview && (
-              <div className="preview-progress">
-                <div className="progress-bar">
-                  <div
-                    className="progress-fill"
-                    style={{ width: `${uploadProgress}%` }}
-                  ></div>
-                </div>
-                <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
-                  Generating PDF preview... {uploadProgress}%
-                </p>
-              </div>
-            )}
-          </div>
-
-          <input
-            id="file-input"
-            type="file"
-            accept="image/*,.pdf"
-            onChange={handleFileInput}
-            style={{ display: 'none' }}
-          />
-
-          {selectedFile && (
-            <div className="preview-container">
-              {/* File info header */}
-              <div className="file-info">
-                <div className="file-type-badge">
-                  {fileType === 'image' ? '📷 Image' : '📄 PDF'}
-                </div>
-                <div className="file-name">{selectedFile.name}</div>
-                <div className="file-size">
-                  {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
-                </div>
-              </div>
-
-              {fileType === 'image' && previewUrl ? (
-                <>
-                  <h4>Image Preview:</h4>
-                  <img
-                    src={previewUrl}
-                    alt="Preview"
-                    className="preview-image-upload"
-                  />
-                </>
-              ) : fileType === 'pdf' && pdfPages.length > 0 ? (
-                <>
-                  <h4>
-                    <File size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
-                    PDF Preview ({pdfPageCount} pages)
-                  </h4>
-
-                  {/* Page Selection Controls */}
-                  <div className="page-selection-controls">
-                    <div className="selection-summary">
-                      <strong>Selected:</strong> {selectedPages.length} of {pdfPageCount} pages
-                      {selectedPages.length > 0 && (
-                        <span className="selected-pages">
-                          ({selectedPages.join(', ')})
-                        </span>
-                      )}
-                    </div>
-                    <div className="selection-buttons">
-                      <button
-                        className="button small"
-                        onClick={selectAllPages}
-                        disabled={selectedPages.length === pdfPageCount}
-                      >
-                        Select All
-                      </button>
-                      <button
-                        className="button small"
-                        onClick={clearPageSelection}
-                        disabled={selectedPages.length === 0}
-                      >
-                        Clear All
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Page Previews */}
-                  <div className="pdf-preview-grid">
-                    {pdfPages.map((page) => (
-                      <div
-                        key={page.pageNumber}
-                        className={`pdf-page-preview ${selectedPages.includes(page.pageNumber) ? 'selected' : ''}`}
-                        onClick={() => togglePageSelection(page.pageNumber)}
-                      >
-                        <div className="page-checkbox">
-                          {selectedPages.includes(page.pageNumber) ? (
-                            <CheckSquare size={16} />
-                          ) : (
-                            <Square size={16} />
-                          )}
-                        </div>
-                        <img
-                          src={page.previewUrl}
-                          alt={`Page ${page.pageNumber}`}
-                          className="pdf-preview-image"
-                        />
-                        <div className="page-number">Page {page.pageNumber}</div>
-                      </div>
-                    ))}
-                    {pdfPageCount > 5 && (
-                      <div className="pdf-page-preview more-pages">
-                        <div className="more-pages-text">
-                          +{pdfPageCount - 5} more pages
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </>
-              ) : null}
-
-              <button
-                className="button"
-                onClick={processOCR}
-                disabled={isLoading || (fileType === 'pdf' && selectedPages.length === 0)}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader size={16} style={{ marginRight: '8px' }} />
-                    Processing...
-                  </>
-                ) : (
-                  `Extract Text${fileType === 'pdf' ? ` (${selectedPages.length} pages)` : ''}`
-                )}
-              </button>
-            </div>
-          )}
-        </div>
+      {/* File Upload Section */}
+      {!result && Object.keys(comparisonResults).length === 0 && (
+        <FileUpload
+          selectedFile={selectedFile}
+          fileType={fileType}
+          previewUrl={previewUrl}
+          pdfPages={pdfPages}
+          selectedPages={selectedPages}
+          pdfPageCount={pdfPageCount}
+          isDragOver={isDragOver}
+          isGeneratingPreview={isGeneratingPreview}
+          uploadProgress={uploadProgress}
+          onFileSelect={handleFileSelect}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onFileInput={handleFileInput}
+          togglePageSelection={togglePageSelection}
+          selectAllPages={selectAllPages}
+          clearPageSelection={clearPageSelection}
+          processOCR={processOCR}
+          isLoading={isLoading}
+          isComparisonMode={isComparisonMode(selectedBackend)}
+        />
       )}
 
       {error && (
@@ -599,297 +476,29 @@ function App() {
         </div>
       )}
 
+      {/* Single Backend Result Display */}
       {result && (
-        <>
-          <div className="preview-section">
-            <div className="preview-image">
-              <h3>
-                {result.file_type === 'pdf' ? (
-                  <File size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
-                ) : (
-                  <ImageIcon size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
-                )}
-                {result.file_type === 'pdf' ? 'PDF Document' : 'Original Image'}
-              </h3>
-              {result.file_type === 'pdf' ? (
-                <div style={{ textAlign: 'center', padding: '20px' }}>
-                  <File size={48} style={{ color: '#007bff', marginBottom: '10px' }} />
-                  <div style={{ fontSize: '14px', color: '#666' }}>
-                    <div><strong>File:</strong> {result.file_name}</div>
-                    <div><strong>Pages:</strong> {result.page_count || 'N/A'}</div>
-                    {result.processed_pages && (
-                      <div><strong>Processed:</strong> {result.processed_pages.join(', ')}</div>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <img src={previewUrl} alt="Original" />
-              )}
-            </div>
-
-            {result.boxes_image && (
-              <div className="preview-image">
-                <h3>
-                  <FileText size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
-                  Image with Bounding Boxes
-                </h3>
-                <img src={`data:image/jpeg;base64,${result.boxes_image}`} alt="With bounding boxes" />
-              </div>
-            )}
-          </div>
-
-          <div className="result-section">
-            <div className="result-tabs">
-              <button
-                className={`tab ${activeTab === 'rendered' ? 'active' : ''}`}
-                onClick={() => setActiveTab('rendered')}
-              >
-                Rendered Markdown
-              </button>
-              <button
-                className={`tab ${activeTab === 'source' ? 'active' : ''}`}
-                onClick={() => setActiveTab('source')}
-              >
-                Source Markdown
-              </button>
-              <button
-                className={`tab ${activeTab === 'raw' ? 'active' : ''}`}
-                onClick={() => setActiveTab('raw')}
-              >
-                Raw OCR Output
-              </button>
-            </div>
-
-            {activeTab === 'rendered' ? (
-              <div
-                className="markdown-content"
-                dangerouslySetInnerHTML={{ __html: result.source_markdown }}
-              />
-            ) : activeTab === 'source' ? (
-              <div className="markdown-source">
-                {result.markdown}
-              </div>
-            ) : (
-              <div className="markdown-raw">
-                <pre>{JSON.stringify(result.raw_result, null, 2)}</pre>
-              </div>
-            )}
-
-            <div className="result-metrics">
-              <div className="metric">
-                <strong>Backend:</strong> {getBackendLabel(result.backend)}
-              </div>
-              <div className={`metric ${result.processing_time < 5 ? 'success' : result.processing_time < 15 ? 'warning' : 'error'}`}>
-                <strong>Processing Time:</strong> {result.processing_time?.toFixed(2)}s
-              </div>
-              {result.markdown && (
-                <div className="metric">
-                  <strong>Text Length:</strong> {result.markdown.length} chars
-                </div>
-              )}
-              {result.file_type && (
-                <div className="metric">
-                  <strong>File Type:</strong> {result.file_type.toUpperCase()}
-                </div>
-              )}
-              {result.page_count && (
-                <div className="metric">
-                  <strong>Total Pages:</strong> {result.page_count}
-                </div>
-              )}
-              {result.processed_pages && (
-                <div className="metric success">
-                  <strong>Processed Pages:</strong> {result.processed_pages.length}
-                </div>
-              )}
-              {result.boxes_image && (
-                <div className="metric success">
-                  <strong>Bounding Boxes:</strong> ✓ Detected
-                </div>
-              )}
-            </div>
-
-            <div style={{ textAlign: 'center', marginTop: '20px' }}>
-              <button className="button" onClick={resetForm}>
-                Process Another File
-              </button>
-            </div>
-          </div>
-        </>
+        <ResultDisplay
+          result={result}
+          previewUrl={previewUrl}
+          onReset={resetForm}
+          getBackendLabel={getBackendLabel}
+        />
       )}
 
+      {/* Comparison Mode Display */}
       {Object.keys(comparisonResults).length > 0 && (
-        <>
-          <div className="preview-section">
-            <div className="preview-image">
-              <h3>
-                {fileType === 'pdf' ? (
-                  <File size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
-                ) : (
-                  <ImageIcon size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
-                )}
-                {fileType === 'pdf' ? 'PDF Document' : 'Original Image'}
-              </h3>
-              {fileType === 'pdf' ? (
-                <div style={{ textAlign: 'center', padding: '20px' }}>
-                  <File size={48} style={{ color: '#007bff', marginBottom: '10px' }} />
-                  <div style={{ fontSize: '14px', color: '#666' }}>
-                    <div><strong>File:</strong> {fileName}</div>
-                    <div><strong>Pages:</strong> {pdfPageCount || 'N/A'}</div>
-                    {selectedPages.length > 0 && (
-                      <div><strong>Selected:</strong> {selectedPages.join(', ')}</div>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <img src={previewUrl} alt="Original" />
-              )}
-            </div>
-          </div>
-
-          <div className="comparison-section">
-            <h2 style={{ textAlign: 'center', marginBottom: '30px' }}>
-              <GitCompare size={24} style={{ marginRight: '10px', verticalAlign: 'middle' }} />
-              Backend Comparison Results
-            </h2>
-
-            <div className="comparison-grid">
-              {getComparisonBackends().map((backend) => (
-                <div key={backend} className="comparison-card">
-                  <div className="comparison-header">
-                    <h3>{getBackendLabel(backend)}</h3>
-                    <div className={`status ${comparisonResults[backend]?.success ? 'success' : 'error'}`}>
-                      {comparisonResults[backend]?.success ? '✓ Success' : '✗ Failed'}
-                    </div>
-                  </div>
-
-                  {comparisonResults[backend]?.success ? (
-                    <>
-                      <div className="comparison-tabs">
-                        <button
-                          className={`tab ${activeTab === 'rendered' ? 'active' : ''}`}
-                          onClick={() => setActiveTab('rendered')}
-                        >
-                          Rendered
-                        </button>
-                        <button
-                          className={`tab ${activeTab === 'source' ? 'active' : ''}`}
-                          onClick={() => setActiveTab('source')}
-                        >
-                          Source
-                        </button>
-                        <button
-                          className={`tab ${activeTab === 'raw' ? 'active' : ''}`}
-                          onClick={() => setActiveTab('raw')}
-                        >
-                          Raw
-                        </button>
-                      </div>
-
-                      {activeTab === 'rendered' ? (
-                        <div
-                          className="markdown-content comparison-content"
-                          dangerouslySetInnerHTML={{ __html: comparisonResults[backend].source_markdown }}
-                        />
-                      ) : activeTab === 'source' ? (
-                        <div className="markdown-source comparison-content">
-                          {comparisonResults[backend].markdown}
-                        </div>
-                      ) : (
-                        <div className="markdown-raw comparison-content">
-                          <pre>{JSON.stringify(comparisonResults[backend].raw_result, null, 2)}</pre>
-                        </div>
-                      )}
-
-                      <div className="comparison-metrics">
-                        <div className={`metric ${comparisonResults[backend].processing_time < 5 ? 'success' : comparisonResults[backend].processing_time < 15 ? 'warning' : 'error'}`}>
-                          <strong>Processing Time:</strong> {comparisonResults[backend].processing_time?.toFixed(2)}s
-                        </div>
-                        {comparisonResults[backend].markdown && (
-                          <div className="metric">
-                            <strong>Text Length:</strong> {comparisonResults[backend].markdown.length} chars
-                          </div>
-                        )}
-                        {comparisonResults[backend].file_type && (
-                          <div className="metric">
-                            <strong>File Type:</strong> {comparisonResults[backend].file_type.toUpperCase()}
-                          </div>
-                        )}
-                        {comparisonResults[backend].page_count && (
-                          <div className="metric">
-                            <strong>Total Pages:</strong> {comparisonResults[backend].page_count}
-                          </div>
-                        )}
-                        {comparisonResults[backend].processed_pages && (
-                          <div className="metric success">
-                            <strong>Processed Pages:</strong> {comparisonResults[backend].processed_pages.length}
-                          </div>
-                        )}
-                        {comparisonResults[backend].boxes_image && (
-                          <div className="metric success">
-                            <strong>Bounding Boxes:</strong> ✓ Detected
-                          </div>
-                        )}
-                      </div>
-                    </>
-                  ) : (
-                    <div className="comparison-error">
-                      <strong>Error:</strong> {comparisonResults[backend]?.error || 'Unknown error'}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <div className="comparison-summary">
-              <h3>Performance Summary</h3>
-              <div className="summary-grid">
-                {(() => {
-                  // Determine fastest and slowest backends
-                  const successfulBackends = getComparisonBackends().filter(
-                    backend => comparisonResults[backend]?.success
-                  );
-
-                  if (successfulBackends.length === 0) return null;
-
-                  const processingTimes = successfulBackends.map(
-                    backend => comparisonResults[backend].processing_time
-                  );
-                  const fastestTime = Math.min(...processingTimes);
-                  const slowestTime = Math.max(...processingTimes);
-
-                  return getComparisonBackends().map((backend) => {
-                    const isFastest = comparisonResults[backend]?.success &&
-                                     comparisonResults[backend].processing_time === fastestTime;
-                    const isSlowest = comparisonResults[backend]?.success &&
-                                     comparisonResults[backend].processing_time === slowestTime;
-
-                    return (
-                      <div
-                        key={backend}
-                        className={`summary-item ${isFastest ? 'fastest' : ''} ${isSlowest ? 'slowest' : ''}`}
-                      >
-                        <div className="summary-backend">{getBackendLabel(backend)}</div>
-                        <div className="summary-time">
-                          {comparisonResults[backend]?.success
-                            ? `${comparisonResults[backend].processing_time?.toFixed(2)}s`
-                            : 'Failed'
-                          }
-                        </div>
-                      </div>
-                    );
-                  });
-                })()}
-              </div>
-            </div>
-
-            <div style={{ textAlign: 'center', marginTop: '30px' }}>
-              <button className="button" onClick={resetForm}>
-                Process Another File
-              </button>
-            </div>
-          </div>
-        </>
+        <ComparisonDisplay
+          comparisonResults={comparisonResults}
+          fileType={fileType}
+          previewUrl={previewUrl}
+          selectedFile={selectedFile}
+          pdfPageCount={pdfPageCount}
+          selectedPages={selectedPages}
+          onReset={resetForm}
+          getBackendLabel={getBackendLabel}
+          getComparisonBackends={getComparisonBackends}
+        />
       )}
 
       {isLoading && (

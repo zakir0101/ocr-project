@@ -208,6 +208,17 @@ body {
   min-height: 300px;
 }
 
+.markdown-raw {
+  font-family: 'Courier New', monospace;
+  white-space: pre-wrap;
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  min-height: 300px;
+  overflow-x: auto;
+}
+
 .button {
   background: #007bff;
   color: white;
@@ -461,6 +472,13 @@ body {
   background: #fafafa;
 }
 
+.result-card {
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fafafa;
+}
+
 .comparison-header {
   display: flex;
   justify-content: space-between;
@@ -522,6 +540,12 @@ body {
   overflow-y: auto;
 }
 
+.result-content {
+  min-height: 200px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
 .comparison-metrics {
   padding: 15px 20px;
   background: white;
@@ -532,6 +556,13 @@ body {
 }
 
 .comparison-error {
+  padding: 20px;
+  background: #f8d7da;
+  color: #721c24;
+  text-align: center;
+}
+
+.result-error {
   padding: 20px;
   background: #f8d7da;
   color: #721c24;

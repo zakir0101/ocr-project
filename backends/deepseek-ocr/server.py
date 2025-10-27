@@ -14,7 +14,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from deepseek_ocr_backend import DeepSeekOCRBackend
 
 # Initialize Flask app
@@ -74,6 +74,19 @@ def ocr_pdf():
             os.remove(temp_path)
         except:
             pass
+
+
+@app.route("/images/<image_id>.jpg", methods=["GET"])
+def serve_cropped_image(image_id):
+    """Serve cropped images from OCR processing"""
+    try:
+        image_path = Path("outputs") / "images" / f"{image_id}.jpg"
+        if image_path.exists():
+            return send_file(image_path, mimetype='image/jpeg')
+        else:
+            return jsonify({'error': 'Cropped image not found'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route("/health", methods=["GET"])

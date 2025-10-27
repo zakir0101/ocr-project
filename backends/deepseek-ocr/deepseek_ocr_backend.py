@@ -197,6 +197,11 @@ class DeepSeekOCRBackend(OCRBackend):
             # Process image through DeepSeek OCR
             raw_output = self._process_image_with_deepseek(image, **kwargs)
 
+            # Extract image references and crop images (like reference implementation)
+            matches_ref, matches_images, matches_other = self._re_match(raw_output)
+            if matches_images:
+                self._crop_and_save_images(image_path, matches_images)
+
             # Extract markdown and bounding boxes
             markdown_result = self._extract_markdown_from_output(raw_output)
             source_markdown_result = self._extract_source_markdown_from_output(raw_output)
@@ -590,6 +595,44 @@ class DeepSeekOCRBackend(OCRBackend):
         print(f"🔍 DEBUG: Final markdown result: '{final_result}'")
         return final_result
 
+    def _re_match(self, text):
+        """Extract <|ref|> and <|det|> tags from OCR output (official implementation)"""
+        import re
+
+        pattern = r'(<\|ref\|>(.*?)<\|/ref\|><\|det\|>(.*?)<\|/det\|>)'
+        matches = re.findall(pattern, text, re.DOTALL)
+
+        matches_image = []
+        matches_other = []
+        for a_match in matches:
+            if '<|ref|>image<|/ref|>' in a_match[0]:
+                matches_image.append(a_match[0])
+            else:
+                matches_other.append(a_match[0])
+        return matches, matches_image, matches_other
+
+    def _extract_coordinates_and_label(self, ref_text, image_width, image_height):
+        """Extract coordinates and label from <|ref|> and <|det|> tags (official implementation)"""
+        import re
+
+        try:
+            # Extract the pattern: <|ref|>label<|/ref|><|det|>[[x1,y1,x2,y2]]<|/det|>
+            pattern = r'<\|ref\|>(.*?)<\|/ref\|><\|det\|>(.*?)<\|/det\|>'
+            match = re.search(pattern, ref_text, re.DOTALL)
+            if match:
+                label_type = match.group(1)
+                coords_text = match.group(2)
+
+                # Extract coordinates from [[x1,y1,x2,y2]]
+                if coords_text.startswith('[[') and coords_text.endswith(']]'):
+                    coords_list = eval(coords_text)
+                    return (label_type, coords_list)
+        except Exception as e:
+            print(f"Error extracting coordinates: {e}")
+            return None
+
+        return None
+
     def _extract_source_markdown_from_output(self, raw_output: str) -> str:
         """
         Extract source markdown for rendering - preserves HTML tables and formatting
@@ -610,13 +653,39 @@ class DeepSeekOCRBackend(OCRBackend):
             print("🔍 DEBUG: Raw output is empty, returning empty string")
             return ""
 
-        # Process OCR output for rendering like reference implementation
-        # Remove all <|ref|> and <|det|> tags while preserving the content
-        processed = re.sub(r'<\|ref\|>.*?<\|/ref\|>', '', raw_output)
-        processed = re.sub(r'<\|det\|>.*?<\|/det\|>', '', processed)
+        # Use reference implementation's process_ocr_for_rendering function logic
+        # Extract image references using official implementation
+        matches_ref, matches_images, matches_other = self._re_match(raw_output)
 
-        # Clean up extra whitespace
+        # Start with the raw text
+        processed = raw_output
+
+        # Replace image references with proper HTML <img> tags
+        for idx, a_match_image in enumerate(matches_images):
+            # Extract coordinates from the image reference
+            result = self._extract_coordinates_and_label(a_match_image, 1000, 1000)  # Use dummy dimensions for calculation
+            if result:
+                label_type, coords_list = result
+                if label_type == 'image' and coords_list:
+                    # Get the first bounding box coordinates
+                    x1, y1, x2, y2 = coords_list[0]
+                    # Calculate width and height from coordinates
+                    width = x2 - x1
+                    height = y2 - y1
+                    # Create proper HTML img tag with server URL and dimensions
+                    img_tag = f'<img src="http://localhost:5000/images/{idx}.jpg" width="{width}" height="{height}" alt="Extracted image"><br>'
+                    processed = processed.replace(a_match_image, img_tag)
+
+        # Remove other <|ref|> and <|det|> tags (non-image)
+        for a_match_other in matches_other:
+            processed = processed.replace(a_match_other, '')
+
+        # Clean up extra whitespace and handle line breaks for HTML rendering
         processed = re.sub(r'\n\s*\n', '\n\n', processed)
+
+        # Convert newlines to <br> tags for proper HTML rendering
+        processed = processed.replace('\n', '<br>')
+
         processed = processed.strip()
 
         print(f"🔍 DEBUG: Processed source markdown text length: {len(processed)}")
@@ -630,6 +699,45 @@ class DeepSeekOCRBackend(OCRBackend):
 
         print(f"🔍 DEBUG: Final source markdown result: '{final_result}'")
         return final_result
+
+    def _crop_and_save_images(self, image_path, matches_images):
+        """Crop and save images from bounding boxes (official implementation)"""
+        try:
+            from pathlib import Path
+
+            image = Image.open(image_path).convert('RGB')
+            image_width, image_height = image.size
+
+            # Create images directory
+            images_dir = Path("outputs") / "images"
+            images_dir.mkdir(parents=True, exist_ok=True)
+
+            for idx, match_image in enumerate(matches_images):
+                result = self._extract_coordinates_and_label(match_image, image_width, image_height)
+                if result:
+                    label_type, points_list = result
+                    if label_type == 'image':
+                        for points in points_list:
+                            x1, y1, x2, y2 = points
+
+                            # Normalize coordinates from 0-999 range to actual image dimensions
+                            x1 = int(x1 / 999 * image_width)
+                            y1 = int(y1 / 999 * image_height)
+                            x2 = int(x2 / 999 * image_width)
+                            y2 = int(y2 / 999 * image_height)
+
+                            try:
+                                cropped = image.crop((x1, y1, x2, y2))
+                                cropped.save(images_dir / f"{idx}.jpg")
+                                print(f"✅ Cropped and saved image {idx}")
+                            except Exception as e:
+                                print(f"Error cropping image {idx}: {e}")
+                                continue
+
+            return True
+        except Exception as e:
+            print(f"Error in crop_and_save_images: {e}")
+            return False
 
     def _generate_boxes_image(
         self, image: Image.Image, raw_output: str
