@@ -468,7 +468,4 @@ CURRENT_SSH_SERVER_PORT="26300"
 - use sleep to wait for long runnign task
 - no .. no wati .. did I not tell you . its forbidden to change could in the server only change code local then add,commit,push
 - you are not supposed to read/modify the image_process.py file at any cost .. just look how its imported and used in the reference impl
-
-
-
-
+- do not deploy the code .. ask the user politly to do it

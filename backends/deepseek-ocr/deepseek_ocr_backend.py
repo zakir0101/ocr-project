@@ -198,9 +198,7 @@ class DeepSeekOCRBackend(OCRBackend):
                 self._crop_and_save_images(image_path, matches_images)
 
             # Extract rendered HTML and bounding boxes
-            rendered_html = self._extract_source_markdown_from_output(raw_output)
-            # Add line breaks to rendered HTML
-            rendered_html = self._add_line_breaks_to_html(rendered_html)
+            rendered_html = self._process_ocr_for_rendering(raw_output)
             boxes_image = self._generate_boxes_image(image, raw_output)
 
             processing_time = time.time() - start_time
@@ -268,9 +266,7 @@ class DeepSeekOCRBackend(OCRBackend):
             )
 
             # Create proper RENDERED output - use same function as image processing
-            rendered_html = self._extract_source_markdown_from_output(markdown_result)
-            # Add line breaks to rendered HTML
-            rendered_html = self._add_line_breaks_to_html(rendered_html)
+            rendered_html = self._process_ocr_for_rendering(markdown_result)
 
             processing_time = time.time() - start_time
 
@@ -399,9 +395,17 @@ class DeepSeekOCRBackend(OCRBackend):
                 # Process image references like official code
                 matches_ref, matches_images, matches_other = self._re_match(content)
 
-                # Replace image references with markdown links
+                # Crop and save images from bounding boxes
+                if matches_images:
+                    # Save the current page image temporarily to crop from it
+                    temp_image_path = f"/tmp/pdf_page_{jdx}.png"
+                    img.save(temp_image_path)
+                    self._crop_and_save_images(temp_image_path, matches_images, image_prefix=f"{jdx}_")
+
+                # Replace image references with direct HTML img tags
                 for idx, a_match_image in enumerate(matches_images):
-                    content = content.replace(a_match_image, f'![](images/{jdx}_{idx}.jpg)\n')
+                    img_tag = f'<img src="http://localhost:5000/images/{jdx}_{idx}.jpg" alt="Extracted image" style="max-width: 100%; height: auto;"><br>'
+                    content = content.replace(a_match_image, img_tag)
 
                 # Remove other <|ref|> tags and clean up
                 for a_match_other in matches_other:
@@ -744,7 +748,7 @@ class DeepSeekOCRBackend(OCRBackend):
         print(f"🔍 DEBUG: Final source markdown result: '{final_result}'")
         return final_result
 
-    def _crop_and_save_images(self, image_path, matches_images):
+    def _crop_and_save_images(self, image_path, matches_images, image_prefix=""):
         """Crop and save images from bounding boxes (official implementation)"""
         try:
             from pathlib import Path
@@ -772,8 +776,9 @@ class DeepSeekOCRBackend(OCRBackend):
 
                             try:
                                 cropped = image.crop((x1, y1, x2, y2))
-                                cropped.save(images_dir / f"{idx}.jpg")
-                                print(f"✅ Cropped and saved image {idx}")
+                                image_filename = f"{image_prefix}{idx}.jpg" if image_prefix else f"{idx}.jpg"
+                                cropped.save(images_dir / image_filename)
+                                print(f"✅ Cropped and saved image {image_filename}")
                             except Exception as e:
                                 print(f"Error cropping image {idx}: {e}")
                                 continue
