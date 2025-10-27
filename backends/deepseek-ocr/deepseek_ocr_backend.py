@@ -23,7 +23,7 @@ from shared.api_contract import create_unified_response
 
 # Set vLLM to use legacy API (compatible with DeepSeek OCR)
 os.environ["VLLM_USE_V1"] = "0"
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = '0'
 
 # Configuration
 DEEPSEEK_PROMPT = "<image>\n<|grounding|>Convert the document to markdown."
@@ -177,16 +177,14 @@ class DeepSeekOCRBackend(OCRBackend):
 
             # Load and process image - ensure RGB format
             image = Image.open(image_path)
-            print(
-                f"🔍 DEBUG: Original image mode: {image.mode}, size: {image.size}"
-            )
+            print(f"🔍 DEBUG: Original image mode: {image.mode}, size: {image.size}")
 
             # Convert to RGB to ensure 3 channels (remove alpha channel if present)
-            if image.mode in ("RGBA", "LA", "P"):
-                image = image.convert("RGB")
+            if image.mode in ('RGBA', 'LA', 'P'):
+                image = image.convert('RGB')
                 print(f"🔍 DEBUG: Converted image from {image.mode} to RGB")
-            elif image.mode != "RGB":
-                image = image.convert("RGB")
+            elif image.mode != 'RGB':
+                image = image.convert('RGB')
                 print(f"🔍 DEBUG: Converted image from {image.mode} to RGB")
             else:
                 print(f"🔍 DEBUG: Image already in RGB format")
@@ -195,9 +193,7 @@ class DeepSeekOCRBackend(OCRBackend):
             raw_output = self._process_image_with_deepseek(image, **kwargs)
 
             # Extract image references and crop images (like reference implementation)
-            matches_ref, matches_images, matches_other = self._re_match(
-                raw_output
-            )
+            matches_ref, matches_images, matches_other = self._re_match(raw_output)
             if matches_images:
                 self._crop_and_save_images(image_path, matches_images)
 
@@ -207,12 +203,8 @@ class DeepSeekOCRBackend(OCRBackend):
 
             processing_time = time.time() - start_time
 
-            print(
-                f"🔍 DEBUG: OCR processing completed in {processing_time:.2f}s"
-            )
-            print(
-                f"🔍 DEBUG: Final rendered HTML length: {len(rendered_html)}"
-            )
+            print(f"🔍 DEBUG: OCR processing completed in {processing_time:.2f}s")
+            print(f"🔍 DEBUG: Final rendered HTML length: {len(rendered_html)}")
 
             return create_unified_response(
                 success=True,
@@ -370,13 +362,11 @@ class DeepSeekOCRBackend(OCRBackend):
             sampling_params = SamplingParams(
                 temperature=0.0,
                 max_tokens=8192,  # Official uses 8192
-                logits_processors=[
-                    NoRepeatNGramLogitsProcessor(
-                        ngram_size=20,  # Official uses 20 for PDF
-                        window_size=50,  # Official uses 50 for PDF
-                        whitelist_token_ids={128821, 128822},
-                    )
-                ],
+                logits_processors=[NoRepeatNGramLogitsProcessor(
+                    ngram_size=20,  # Official uses 20 for PDF
+                    window_size=50,  # Official uses 50 for PDF
+                    whitelist_token_ids={128821, 128822}
+                )],
                 skip_special_tokens=False,
                 include_stop_str_in_output=True,  # Official includes this
             )
@@ -387,34 +377,30 @@ class DeepSeekOCRBackend(OCRBackend):
             )
 
             # Process results using official approach
-            contents_det = ""
-            contents = ""
+            contents_det = ''
+            contents = ''
             raw_outputs = []
 
             for jdx, (output, img) in enumerate(zip(outputs_list, images)):
                 content = output.outputs[0].text
 
                 # Clean up the output like official code
-                if "<|endoftext|>" in content:
-                    content = content.replace("<|endoftext|>", "")
+                if '<|endoftext|>' in content:
+                    content = content.replace('<|endoftext|>', '')
 
                 # Add page separator like official code
-                page_separator = f"\n<--- Page Split --->\n"
+                page_separator = f'\n<--- Page Split --->\n'
                 contents_det += content + page_separator
 
                 # Process image references like official code
-                matches_ref, matches_images, matches_other = self._re_match(
-                    content
-                )
+                matches_ref, matches_images, matches_other = self._re_match(content)
 
                 # Crop and save images from bounding boxes
                 if matches_images:
                     # Save the current page image temporarily to crop from it
                     temp_image_path = f"/tmp/pdf_page_{jdx}.png"
                     img.save(temp_image_path)
-                    self._crop_and_save_images(
-                        temp_image_path, matches_images, image_prefix=f"{jdx}_"
-                    )
+                    self._crop_and_save_images(temp_image_path, matches_images, image_prefix=f"{jdx}_")
 
                 # Replace image references with direct HTML img tags
                 for idx, a_match_image in enumerate(matches_images):
@@ -423,24 +409,16 @@ class DeepSeekOCRBackend(OCRBackend):
 
                 # Remove other <|ref|> tags and clean up
                 for a_match_other in matches_other:
-                    content = (
-                        content.replace(a_match_other, "")
-                        .replace("\\coloneqq", ":=")
-                        .replace("\\eqqcolon", "=:")
-                        .replace("\n\n\n\n", "\n\n")
-                        .replace("\n\n\n", "\n\n")
-                    )
+                    content = content.replace(a_match_other, '').replace('\\coloneqq', ':=').replace('\\eqqcolon', '=:').replace('\n\n\n\n', '\n\n').replace('\n\n\n', '\n\n')
 
                 contents += content + page_separator
-                raw_outputs.append(
-                    {
-                        "page": jdx + 1,
-                        "raw_output": content,
-                        "matches_ref": matches_ref,
-                        "matches_images": matches_images,
-                        "matches_other": matches_other,
-                    }
-                )
+                raw_outputs.append({
+                    "page": jdx + 1,
+                    "raw_output": content,
+                    "matches_ref": matches_ref,
+                    "matches_images": matches_images,
+                    "matches_other": matches_other
+                })
 
             # Use the cleaned content for markdown
             markdown_content = contents
@@ -457,9 +435,7 @@ class DeepSeekOCRBackend(OCRBackend):
             print(f"Error in PDF processing: {e}")
             raise
 
-    def _pdf_to_images_high_quality(
-        self, pdf_path: str, selected_pages: List[int] = None, dpi: int = 144
-    ):
+    def _pdf_to_images_high_quality(self, pdf_path: str, selected_pages: List[int] = None, dpi: int = 144):
         """
         Convert PDF to high-quality images using official approach.
 
@@ -484,9 +460,7 @@ class DeepSeekOCRBackend(OCRBackend):
         else:
             # Convert to 0-indexed and validate
             pages_to_process = [
-                p - 1
-                for p in selected_pages
-                if 1 <= p <= pdf_document.page_count
+                p - 1 for p in selected_pages if 1 <= p <= pdf_document.page_count
             ]
 
         if not pages_to_process:
@@ -506,14 +480,12 @@ class DeepSeekOCRBackend(OCRBackend):
             img = Image.open(io.BytesIO(img_data))
 
             # Convert to RGB like official code
-            if img.mode in ("RGBA", "LA"):
-                background = Image.new("RGB", img.size, (255, 255, 255))
-                background.paste(
-                    img, mask=img.split()[-1] if img.mode == "RGBA" else None
-                )
+            if img.mode in ('RGBA', 'LA'):
+                background = Image.new('RGB', img.size, (255, 255, 255))
+                background.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
                 img = background
-            elif img.mode != "RGB":
-                img = img.convert("RGB")
+            elif img.mode != 'RGB':
+                img = img.convert('RGB')
 
             images.append(img)
 
@@ -577,14 +549,12 @@ class DeepSeekOCRBackend(OCRBackend):
                 temperature=0.0,
                 top_p=1.0,
                 max_tokens=4096,
-                logits_processors=[
-                    NoRepeatNGramLogitsProcessor(
-                        ngram_size=30,
-                        window_size=90,
-                        whitelist_token_ids={128821, 128822},
-                    )
-                ],
-                skip_special_tokens=False,
+                logits_processors=[NoRepeatNGramLogitsProcessor(
+                    ngram_size=30,
+                    window_size=90,
+                    whitelist_token_ids={128821, 128822}
+                )],
+                skip_special_tokens=False
             )
 
             # Generate OCR output using vLLM engine - EXACTLY like reference
@@ -595,24 +565,22 @@ class DeepSeekOCRBackend(OCRBackend):
             final_output = ""
 
             async for request_output in self.engine.generate(
-                request, sampling_params=sampling_params
+                request, sampling_params, request_id
             ):
                 if request_output.outputs:
                     full_text = request_output.outputs[0].text
                     # Stream the output like official code
                     new_text = full_text[printed_length:]
                     if new_text:
-                        print(new_text, end="", flush=True)
+                        print(new_text, end='', flush=True)
                     printed_length = len(full_text)
                     final_output = full_text
 
-            print("\n")  # New line after generation completes
+            print('\n')  # New line after generation completes
             return final_output
 
         try:
-            print(
-                f"🔍 DEBUG: Starting DeepSeek OCR processing for image: {image.size}"
-            )
+            print(f"🔍 DEBUG: Starting DeepSeek OCR processing for image: {image.size}")
             print(f"🔍 DEBUG: Using prompt: {DEEPSEEK_PROMPT}")
 
             # Run async generation with timeout
@@ -620,16 +588,10 @@ class DeepSeekOCRBackend(OCRBackend):
                 asyncio.wait_for(generate_ocr(), timeout=120.0)
             )
 
-            print(
-                f"🔍 DEBUG: Raw OCR output received, length: {len(final_output) if final_output else 0}"
-            )
+            print(f"🔍 DEBUG: Raw OCR output received, length: {len(final_output) if final_output else 0}")
             if final_output:
-                print(
-                    f"🔍 DEBUG: First 500 chars of raw output: {final_output[:500]}"
-                )
-                print(
-                    f"🔍 DEBUG: Last 500 chars of raw output: {final_output[-500:]}"
-                )
+                print(f"🔍 DEBUG: First 500 chars of raw output: {final_output[:500]}")
+                print(f"🔍 DEBUG: Last 500 chars of raw output: {final_output[-500:]}")
             else:
                 print("🔍 DEBUG: Raw OCR output is EMPTY")
 
@@ -656,29 +618,27 @@ class DeepSeekOCRBackend(OCRBackend):
         import re
 
         print(f"🔍 DEBUG: Starting markdown extraction from raw output")
-        print(
-            f"🔍 DEBUG: Raw output length: {len(raw_output) if raw_output else 0}"
-        )
+        print(f"🔍 DEBUG: Raw output length: {len(raw_output) if raw_output else 0}")
 
         if not raw_output:
             print("🔍 DEBUG: Raw output is empty, returning empty string")
             return ""
 
         # Process OCR output like reference implementation: remove all <|ref|> and <|det|> tags
-        processed = re.sub(r"<\|ref\|>.*?<\|/ref\|>", "", raw_output)
-        processed = re.sub(r"<\|det\|>.*?<\|/det\|>", "", processed)
+        processed = re.sub(r'<\|ref\|>.*?<\|/ref\|>', '', raw_output)
+        processed = re.sub(r'<\|det\|>.*?<\|/det\|>', '', processed)
 
         # Clean up extra whitespace
-        processed = re.sub(
-            r"\n\s*\n", "\n\n", processed
-        )  # Multiple newlines to double newlines
+        processed = re.sub(r'\n\s*\n', '\n\n', processed)  # Multiple newlines to double newlines
         processed = processed.strip()
 
         print(f"🔍 DEBUG: Processed markdown text length: {len(processed)}")
         print(f"🔍 DEBUG: Markdown text preview: '{processed[:200]}...'")
 
         final_result = (
-            processed if processed else "No text extracted from OCR output"
+            processed
+            if processed
+            else "No text extracted from OCR output"
         )
 
         print(f"🔍 DEBUG: Final markdown result: '{final_result}'")
@@ -688,34 +648,32 @@ class DeepSeekOCRBackend(OCRBackend):
         """Extract <|ref|> and <|det|> tags from OCR output (official implementation)"""
         import re
 
-        pattern = r"(<\|ref\|>(.*?)<\|/ref\|><\|det\|>(.*?)<\|/det\|>)"
+        pattern = r'(<\|ref\|>(.*?)<\|/ref\|><\|det\|>(.*?)<\|/det\|>)'
         matches = re.findall(pattern, text, re.DOTALL)
 
         matches_image = []
         matches_other = []
         for a_match in matches:
-            if "<|ref|>image<|/ref|>" in a_match[0]:
+            if '<|ref|>image<|/ref|>' in a_match[0]:
                 matches_image.append(a_match[0])
             else:
                 matches_other.append(a_match[0])
         return matches, matches_image, matches_other
 
-    def _extract_coordinates_and_label(
-        self, ref_text, image_width, image_height
-    ):
+    def _extract_coordinates_and_label(self, ref_text, image_width, image_height):
         """Extract coordinates and label from <|ref|> and <|det|> tags (official implementation)"""
         import re
 
         try:
             # Extract the pattern: <|ref|>label<|/ref|><|det|>[[x1,y1,x2,y2]]<|/det|>
-            pattern = r"<\|ref\|>(.*?)<\|/ref\|><\|det\|>(.*?)<\|/det\|>"
+            pattern = r'<\|ref\|>(.*?)<\|/ref\|><\|det\|>(.*?)<\|/det\|>'
             match = re.search(pattern, ref_text, re.DOTALL)
             if match:
                 label_type = match.group(1)
                 coords_text = match.group(2)
 
                 # Extract coordinates from [[x1,y1,x2,y2]]
-                if coords_text.startswith("[[") and coords_text.endswith("]]"):
+                if coords_text.startswith('[[') and coords_text.endswith(']]'):
                     coords_list = eval(coords_text)
                     return (label_type, coords_list)
         except Exception as e:
@@ -738,9 +696,7 @@ class DeepSeekOCRBackend(OCRBackend):
         import re
 
         print(f"🔍 DEBUG: Starting source markdown extraction from raw output")
-        print(
-            f"🔍 DEBUG: Raw output length: {len(raw_output) if raw_output else 0}"
-        )
+        print(f"🔍 DEBUG: Raw output length: {len(raw_output) if raw_output else 0}")
 
         if not raw_output:
             print("🔍 DEBUG: Raw output is empty, returning empty string")
@@ -756,12 +712,10 @@ class DeepSeekOCRBackend(OCRBackend):
         # Replace image references with proper HTML <img> tags
         for idx, a_match_image in enumerate(matches_images):
             # Extract coordinates from the image reference
-            result = self._extract_coordinates_and_label(
-                a_match_image, 1000, 1000
-            )  # Use dummy dimensions for calculation
+            result = self._extract_coordinates_and_label(a_match_image, 1000, 1000)  # Use dummy dimensions for calculation
             if result:
                 label_type, coords_list = result
-                if label_type == "image" and coords_list:
+                if label_type == 'image' and coords_list:
                     # Get the first bounding box coordinates
                     x1, y1, x2, y2 = coords_list[0]
                     # Calculate width and height from coordinates
@@ -773,37 +727,33 @@ class DeepSeekOCRBackend(OCRBackend):
 
         # Remove other <|ref|> and <|det|> tags (non-image)
         for a_match_other in matches_other:
-            processed = processed.replace(a_match_other, "")
+            processed = processed.replace(a_match_other, '')
 
         # Convert markdown image syntax to HTML img tags
         processed = self._convert_markdown_images_to_html(processed)
 
         # Clean up extra whitespace but PRESERVE newlines for proper markdown rendering
-        processed = re.sub(r"\n\s*\n", "\n\n", processed)
+        processed = re.sub(r'\n\s*\n', '\n\n', processed)
         processed = processed.strip()
 
-        print(
-            f"🔍 DEBUG: Processed source markdown text length: {len(processed)}"
-        )
-        print(
-            f"🔍 DEBUG: Source markdown text preview: '{processed[:200]}...'"
-        )
+        print(f"🔍 DEBUG: Processed source markdown text length: {len(processed)}")
+        print(f"🔍 DEBUG: Source markdown text preview: '{processed[:200]}...'")
 
         final_result = (
-            processed if processed else "No text extracted from OCR output"
+            processed
+            if processed
+            else "No text extracted from OCR output"
         )
 
         print(f"🔍 DEBUG: Final source markdown result: '{final_result}'")
         return final_result
 
-    def _crop_and_save_images(
-        self, image_path, matches_images, image_prefix=""
-    ):
+    def _crop_and_save_images(self, image_path, matches_images, image_prefix=""):
         """Crop and save images from bounding boxes (official implementation)"""
         try:
             from pathlib import Path
 
-            image = Image.open(image_path).convert("RGB")
+            image = Image.open(image_path).convert('RGB')
             image_width, image_height = image.size
 
             # Create images directory
@@ -811,12 +761,10 @@ class DeepSeekOCRBackend(OCRBackend):
             images_dir.mkdir(parents=True, exist_ok=True)
 
             for idx, match_image in enumerate(matches_images):
-                result = self._extract_coordinates_and_label(
-                    match_image, image_width, image_height
-                )
+                result = self._extract_coordinates_and_label(match_image, image_width, image_height)
                 if result:
                     label_type, points_list = result
-                    if label_type == "image":
+                    if label_type == 'image':
                         for points in points_list:
                             x1, y1, x2, y2 = points
 
@@ -828,15 +776,9 @@ class DeepSeekOCRBackend(OCRBackend):
 
                             try:
                                 cropped = image.crop((x1, y1, x2, y2))
-                                image_filename = (
-                                    f"{image_prefix}{idx}.jpg"
-                                    if image_prefix
-                                    else f"{idx}.jpg"
-                                )
+                                image_filename = f"{image_prefix}{idx}.jpg" if image_prefix else f"{idx}.jpg"
                                 cropped.save(images_dir / image_filename)
-                                print(
-                                    f"✅ Cropped and saved image {image_filename}"
-                                )
+                                print(f"✅ Cropped and saved image {image_filename}")
                             except Exception as e:
                                 print(f"Error cropping image {idx}: {e}")
                                 continue
@@ -1008,9 +950,9 @@ class DeepSeekOCRBackend(OCRBackend):
             return html_content
 
         # Convert double newlines to <br><br> (paragraph breaks)
-        html_content = re.sub(r"\n\s*\n", "<br><br>", html_content)
+        html_content = re.sub(r'\n\s*\n', '<br><br>', html_content)
         # Convert single newlines to <br> (line breaks)
-        html_content = re.sub(r"\n", "<br>", html_content)
+        html_content = re.sub(r'\n', '<br>', html_content)
 
         return html_content
 
@@ -1040,12 +982,10 @@ class DeepSeekOCRBackend(OCRBackend):
         # Replace image references with proper HTML <img> tags
         for idx, a_match_image in enumerate(matches_images):
             # Extract coordinates from the image reference
-            result = self._extract_coordinates_and_label(
-                a_match_image, 1000, 1000
-            )  # Use dummy dimensions for calculation
+            result = self._extract_coordinates_and_label(a_match_image, 1000, 1000)  # Use dummy dimensions for calculation
             if result:
                 label_type, coords_list = result
-                if label_type == "image" and coords_list:
+                if label_type == 'image' and coords_list:
                     # Get the first bounding box coordinates
                     x1, y1, x2, y2 = coords_list[0]
                     # Calculate width and height from coordinates
@@ -1057,13 +997,13 @@ class DeepSeekOCRBackend(OCRBackend):
 
         # Remove other <|ref|> and <|det|> tags (non-image)
         for a_match_other in matches_other:
-            processed = processed.replace(a_match_other, "")
+            processed = processed.replace(a_match_other, '')
 
         # Clean up extra whitespace and handle line breaks for HTML rendering
-        processed = re.sub(r"\n\s*\n", "\n\n", processed)
+        processed = re.sub(r'\n\s*\n', '\n\n', processed)
 
         # Convert newlines to <br> tags for proper HTML rendering
-        processed = processed.replace("\n", "<br>")
+        processed = processed.replace('\n', '<br>')
 
         processed = processed.strip()
 
@@ -1090,19 +1030,16 @@ class DeepSeekOCRBackend(OCRBackend):
         print(f"🔍 DEBUG: Converting markdown images to HTML")
 
         # Pattern to match markdown image syntax: ![alt](url)
-        pattern = r"!\[([^\]]*)\]\(([^\)]+)\)"
+        pattern = r'!\[([^\]]*)\]\(([^\)]+)\)'
 
         def replace_image_match(match):
             alt_text = match.group(1)
             image_url = match.group(2)
 
-            print(
-                f"🔍 DEBUG: Found markdown image: alt='{alt_text}', url='{image_url}'"
-            )
+            print(f"🔍 DEBUG: Found markdown image: alt='{alt_text}', url='{image_url}'")
 
             # Extract image filename from URL
             import os
-
             image_filename = os.path.basename(image_url)
 
             # Create HTML img tag with server URL
@@ -1111,13 +1048,9 @@ class DeepSeekOCRBackend(OCRBackend):
             return img_tag
 
         # Replace all markdown image links with HTML img tags
-        processed_content = re.sub(
-            pattern, replace_image_match, markdown_content
-        )
+        processed_content = re.sub(pattern, replace_image_match, markdown_content)
 
-        print(
-            f"🔍 DEBUG: Markdown image conversion completed. Original length: {len(markdown_content)}, Processed length: {len(processed_content)}"
-        )
+        print(f"🔍 DEBUG: Markdown image conversion completed. Original length: {len(markdown_content)}, Processed length: {len(processed_content)}")
 
         return processed_content
 
@@ -1220,3 +1153,4 @@ if __name__ == "__main__":
     # Start Flask server on port 5000
     print("Starting DeepSeek OCR backend server on port 5000...")
     app.run(host="0.0.0.0", port=5000, debug=False)
+
