@@ -139,8 +139,8 @@ class MineruBackend(OCRBackend):
             return create_unified_response(
                 success=False,
                 backend="mineru",
-                raw_result={"deepseek": "", "mineru": {}},
-                markdown="Model not loaded",
+                raw_result={},
+                rendered_html="Model not loaded",
                 image_name=Path(image_path).name,
             )
 
@@ -169,9 +169,8 @@ class MineruBackend(OCRBackend):
                 return create_unified_response(
                     success=True,
                     backend="mineru",
-                    raw_result={"deepseek": "", "mineru": raw_output},
-                    markdown=markdown_result,
-                    source_markdown=markdown_result,
+                    raw_result=raw_output,
+                    rendered_html=markdown_result,
                     boxes_image=boxes_image,
                     processing_time=processing_time,
                     image_name=Path(image_path).name,
@@ -184,8 +183,8 @@ class MineruBackend(OCRBackend):
             return create_unified_response(
                 success=False,
                 backend="mineru",
-                raw_result={"deepseek": "", "mineru": {}},
-                markdown=f"OCR processing failed: {str(e)}",
+                raw_result={},
+                rendered_html=f"OCR processing failed: {str(e)}",
                 processing_time=processing_time,
                 image_name=Path(image_path).name,
             )
@@ -205,8 +204,8 @@ class MineruBackend(OCRBackend):
             return create_unified_response(
                 success=False,
                 backend="mineru",
-                raw_result={"deepseek": "", "mineru": {}},
-                markdown="Model not loaded",
+                raw_result={},
+                rendered_html="Model not loaded",
                 image_name=Path(pdf_path).name,
             )
 
@@ -230,17 +229,13 @@ class MineruBackend(OCRBackend):
                     ""  # PDF bounding box visualization would be more complex
                 )
 
-                # Create proper RENDERED output - use same approach as image processing
-                rendered_output = markdown_result
-
                 processing_time = time.time() - start_time
 
                 return create_unified_response(
                     success=True,
                     backend="mineru",
-                    raw_result={"deepseek": "", "mineru": raw_output},
-                    markdown=rendered_output,  # This is the RENDERED output
-                    source_markdown=markdown_result,  # This is the SOURCE markdown
+                    raw_result=raw_output,
+                    rendered_html=markdown_result,
                     boxes_image=boxes_image,
                     processing_time=processing_time,
                     image_name=Path(pdf_path).name,
@@ -253,8 +248,8 @@ class MineruBackend(OCRBackend):
             return create_unified_response(
                 success=False,
                 backend="mineru",
-                raw_result={"deepseek": "", "mineru": {}},
-                markdown=f"PDF processing failed: {str(e)}",
+                raw_result={},
+                rendered_html=f"PDF processing failed: {str(e)}",
                 processing_time=processing_time,
                 image_name=Path(pdf_path).name,
             )

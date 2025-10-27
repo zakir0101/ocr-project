@@ -57,26 +57,12 @@ UNIFIED_RESPONSE_SCHEMA = {
             "description": "Which backend processed the request"
         },
         "raw_result": {
-            "type": "object",
-            "description": "Backend-specific raw output format",
-            "properties": {
-                "deepseek": {
-                    "type": ["string", "object"],
-                    "description": "DeepSeek raw text output with detection markers or multi-page object"
-                },
-                "mineru": {
-                    "type": "object",
-                    "description": "Mineru structured JSON output"
-                }
-            }
+            "type": ["string", "object"],
+            "description": "Backend-specific raw output (either DeepSeek text or Mineru JSON)"
         },
-        "markdown": {
+        "rendered_html": {
             "type": "string",
-            "description": "Processed markdown text ready for display"
-        },
-        "source_markdown": {
-            "type": "string",
-            "description": "HTML-ready markdown with image references"
+            "description": "Processed HTML content ready for display"
         },
         "boxes_image": {
             "type": "string",
@@ -105,7 +91,7 @@ UNIFIED_RESPONSE_SCHEMA = {
             "description": "List of processed page numbers (1-indexed)"
         }
     },
-    "required": ["success", "backend", "raw_result", "markdown", "processing_time", "file_name"]
+    "required": ["success", "backend", "raw_result", "rendered_html", "processing_time", "file_name"]
 }
 
 
@@ -182,9 +168,8 @@ def validate_request(request_data: Dict[str, Any]) -> bool:
 def create_unified_response(
     success: bool,
     backend: str,
-    raw_result: Dict[str, Any],
-    markdown: str,
-    source_markdown: Optional[str] = None,
+    raw_result: Any,
+    rendered_html: str,
     boxes_image: Optional[str] = None,
     processing_time: Optional[float] = None,
     image_name: Optional[str] = None
@@ -195,9 +180,8 @@ def create_unified_response(
     Args:
         success: Whether OCR processing was successful
         backend: Which backend processed the request
-        raw_result: Backend-specific raw output
-        markdown: Processed markdown text
-        source_markdown: HTML-ready markdown with images
+        raw_result: Backend-specific raw output (string for DeepSeek, dict for Mineru)
+        rendered_html: Processed HTML content ready for display
         boxes_image: Base64-encoded image with bounding boxes
         processing_time: Processing time in seconds
         image_name: Name of processed image file
@@ -209,8 +193,7 @@ def create_unified_response(
         "success": success,
         "backend": backend,
         "raw_result": raw_result,
-        "markdown": markdown,
-        "source_markdown": source_markdown or markdown,
+        "rendered_html": rendered_html,
         "boxes_image": boxes_image or "",
         "processing_time": processing_time or 0.0,
         "image_name": image_name or ""

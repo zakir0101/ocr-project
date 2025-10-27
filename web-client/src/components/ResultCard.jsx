@@ -11,7 +11,7 @@ const ResultCard = ({
 
   // Process MathJax when component mounts or activeTab changes
   useEffect(() => {
-    if (window.MathJax && (activeTab === 'rendered' || activeTab === 'source')) {
+    if (window.MathJax && activeTab === 'rendered') {
       // Give the DOM time to update, then process MathJax
       setTimeout(() => {
         window.MathJax.typesetPromise && window.MathJax.typesetPromise();
@@ -42,12 +42,6 @@ const ResultCard = ({
               Rendered
             </button>
             <button
-              className={`tab ${activeTab === 'source' ? 'active' : ''}`}
-              onClick={() => setActiveTab('source')}
-            >
-              Source
-            </button>
-            <button
               className={`tab ${activeTab === 'raw' ? 'active' : ''}`}
               onClick={() => setActiveTab('raw')}
             >
@@ -59,15 +53,13 @@ const ResultCard = ({
             {activeTab === 'rendered' ? (
               <div
                 className="markdown-content"
-                dangerouslySetInnerHTML={{ __html: result.markdown || result.source_markdown }}
+                dangerouslySetInnerHTML={{ __html: result.rendered_html }}
               />
-            ) : activeTab === 'source' ? (
-              <div className="markdown-source">
-                <ReactMarkdown>{result.source_markdown || result.markdown}</ReactMarkdown>
-              </div>
             ) : (
               <div className="markdown-raw">
-                <pre>{JSON.stringify(result.raw_result, null, 2)}</pre>
+                <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
+                  {JSON.stringify(result.raw_result, null, 2)}
+                </pre>
               </div>
             )}
           </div>
@@ -93,9 +85,9 @@ const ResultMetrics = ({ result, getBackendLabel, isComparisonMode }) => (
     <div className={`metric ${result.processing_time < 5 ? 'success' : result.processing_time < 15 ? 'warning' : 'error'}`}>
       <strong>Processing Time:</strong> {result.processing_time?.toFixed(2)}s
     </div>
-    {result.markdown && (
+    {result.rendered_html && (
       <div className="metric">
-        <strong>Text Length:</strong> {result.markdown.length} chars
+        <strong>Text Length:</strong> {result.rendered_html.length} chars
       </div>
     )}
     {result.file_type && (

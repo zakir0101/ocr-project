@@ -165,8 +165,8 @@ class DeepSeekOCRBackend(OCRBackend):
             return create_unified_response(
                 success=False,
                 backend="deepseek-ocr",
-                raw_result={"deepseek": "", "mineru": {}},
-                markdown="Model not loaded",
+                raw_result="",
+                rendered_html="Model not loaded",
                 image_name=Path(image_path).name,
             )
 
@@ -197,22 +197,20 @@ class DeepSeekOCRBackend(OCRBackend):
             if matches_images:
                 self._crop_and_save_images(image_path, matches_images)
 
-            # Extract markdown and bounding boxes
-            markdown_result = self._extract_markdown_from_output(raw_output)
-            source_markdown_result = self._extract_source_markdown_from_output(raw_output)
+            # Extract rendered HTML and bounding boxes
+            rendered_html = self._extract_markdown_from_output(raw_output)
             boxes_image = self._generate_boxes_image(image, raw_output)
 
             processing_time = time.time() - start_time
 
             print(f"🔍 DEBUG: OCR processing completed in {processing_time:.2f}s")
-            print(f"🔍 DEBUG: Final markdown result length: {len(markdown_result)}")
+            print(f"🔍 DEBUG: Final rendered HTML length: {len(rendered_html)}")
 
             return create_unified_response(
                 success=True,
                 backend="deepseek-ocr",
-                raw_result={"deepseek": raw_output, "mineru": {}},
-                markdown=markdown_result,
-                source_markdown=source_markdown_result,
+                raw_result=raw_output,  # Direct DeepSeek output, not combined format
+                rendered_html=rendered_html,
                 boxes_image=boxes_image,
                 processing_time=processing_time,
                 image_name=Path(image_path).name,
@@ -225,8 +223,8 @@ class DeepSeekOCRBackend(OCRBackend):
             return create_unified_response(
                 success=False,
                 backend="deepseek-ocr",
-                raw_result={"deepseek": "", "mineru": {}},
-                markdown=f"OCR processing failed: {str(e)}",
+                raw_result="",
+                rendered_html=f"OCR processing failed: {str(e)}",
                 processing_time=processing_time,
                 image_name=Path(image_path).name,
             )
@@ -246,8 +244,8 @@ class DeepSeekOCRBackend(OCRBackend):
             return create_unified_response(
                 success=False,
                 backend="deepseek-ocr",
-                raw_result={"deepseek": "", "mineru": {}},
-                markdown="Model not loaded",
+                raw_result="",
+                rendered_html="Model not loaded",
                 image_name=Path(pdf_path).name,
             )
 
@@ -268,16 +266,15 @@ class DeepSeekOCRBackend(OCRBackend):
             )
 
             # Create proper RENDERED output - use same function as image processing
-            rendered_output = self._extract_markdown_from_output(markdown_result)
+            rendered_html = self._extract_markdown_from_output(markdown_result)
 
             processing_time = time.time() - start_time
 
             return create_unified_response(
                 success=True,
                 backend="deepseek-ocr",
-                raw_result={"deepseek": raw_output, "mineru": {}},
-                markdown=rendered_output,  # This is the RENDERED output
-                source_markdown=markdown_result,  # This is the SOURCE markdown
+                raw_result=raw_output,  # Direct DeepSeek output, not combined format
+                rendered_html=rendered_html,
                 boxes_image=boxes_image,
                 processing_time=processing_time,
                 image_name=Path(pdf_path).name,
@@ -290,8 +287,8 @@ class DeepSeekOCRBackend(OCRBackend):
             return create_unified_response(
                 success=False,
                 backend="deepseek-ocr",
-                raw_result={"deepseek": "", "mineru": {}},
-                markdown=f"PDF processing failed: {str(e)}",
+                raw_result="",
+                rendered_html=f"PDF processing failed: {str(e)}",
                 processing_time=processing_time,
                 image_name=Path(pdf_path).name,
             )
