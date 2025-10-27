@@ -21,10 +21,10 @@ from shared.ocr_backend import OCRBackend
 from shared.api_contract import create_unified_response
 
 # Set vLLM to use legacy API (compatible with DeepSeek OCR)
-os.environ['VLLM_USE_V1'] = '0'
+os.environ["VLLM_USE_V1"] = "0"
 
 # Configuration
-DEEPSEEK_PROMPT = '<image>\n<|grounding|>Convert the document to markdown.'
+DEEPSEEK_PROMPT = "<image>\n<|grounding|>Convert the document to markdown."
 CROP_MODE = True
 
 
@@ -54,7 +54,9 @@ class DeepSeekOCRBackend(OCRBackend):
         os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
         print(f"DeepSeekOCRBackend initialized with model_path: {model_path}")
-        print(f"GPU isolation: CUDA_VISIBLE_DEVICES={os.environ.get('CUDA_VISIBLE_DEVICES')}")
+        print(
+            f"GPU isolation: CUDA_VISIBLE_DEVICES={os.environ.get('CUDA_VISIBLE_DEVICES')}"
+        )
 
     def load_model(self) -> bool:
         """
@@ -84,19 +86,25 @@ class DeepSeekOCRBackend(OCRBackend):
                 from vllm import AsyncLLMEngine, SamplingParams
                 from vllm.engine.arg_utils import AsyncEngineArgs
                 from vllm.model_executor.models.registry import ModelRegistry
+
                 from deepseek_ocr import DeepseekOCRForCausalLM
                 from process.ngram_norepeat import NoRepeatNGramLogitsProcessor
 
                 # Import processor exactly like reference implementation
                 from process.image_process import DeepseekOCRProcessor
-                print("✓ Using DeepseekOCRProcessor from process.image_process")
+
+                print(
+                    "✓ Using DeepseekOCRProcessor from process.image_process"
+                )
             except ImportError as e:
                 print(f"✗ Required modules not available: {e}")
                 return False
 
             # Register model
             print("✓ Registering DeepseekOCRForCausalLM model...")
-            ModelRegistry.register_model("DeepseekOCRForCausalLM", DeepseekOCRForCausalLM)
+            ModelRegistry.register_model(
+                "DeepseekOCRForCausalLM", DeepseekOCRForCausalLM
+            )
             print("✓ Model registration successful")
 
             # Initialize vLLM engine - EXACTLY like reference implementation
@@ -117,6 +125,7 @@ class DeepSeekOCRBackend(OCRBackend):
             )
 
             print("✓ Creating AsyncLLMEngine...")
+            ## last executed LINE HERE
             self.engine = AsyncLLMEngine.from_engine_args(engine_args)
             print("✓ vLLM engine initialization successful")
 
@@ -131,7 +140,9 @@ class DeepSeekOCRBackend(OCRBackend):
                 raise
 
             # Processor will be created fresh each time like reference implementation
-            print("✓ Processor will be created fresh for each request (like reference)")
+            print(
+                "✓ Processor will be created fresh for each request (like reference)"
+            )
 
             self.model_loaded = True
             print("✓ DeepSeek OCR model loaded successfully into GPU 0")
@@ -159,7 +170,7 @@ class DeepSeekOCRBackend(OCRBackend):
                 backend="deepseek-ocr",
                 raw_result={"deepseek": "", "mineru": {}},
                 markdown="Model not loaded",
-                image_name=Path(image_path).name
+                image_name=Path(image_path).name,
             )
 
         start_time = time.time()
@@ -185,7 +196,7 @@ class DeepSeekOCRBackend(OCRBackend):
                 source_markdown=markdown_result,
                 boxes_image=boxes_image,
                 processing_time=processing_time,
-                image_name=Path(image_path).name
+                image_name=Path(image_path).name,
             )
 
         except Exception as e:
@@ -198,7 +209,7 @@ class DeepSeekOCRBackend(OCRBackend):
                 raw_result={"deepseek": "", "mineru": {}},
                 markdown=f"OCR processing failed: {str(e)}",
                 processing_time=processing_time,
-                image_name=Path(image_path).name
+                image_name=Path(image_path).name,
             )
 
     def ocr_pdf(self, pdf_path: str, **kwargs) -> Dict[str, Any]:
@@ -218,20 +229,24 @@ class DeepSeekOCRBackend(OCRBackend):
                 backend="deepseek-ocr",
                 raw_result={"deepseek": "", "mineru": {}},
                 markdown="Model not loaded",
-                image_name=Path(pdf_path).name
+                image_name=Path(pdf_path).name,
             )
 
         start_time = time.time()
 
         try:
             # Extract selected pages from kwargs
-            selected_pages = kwargs.get('pages', None)
+            selected_pages = kwargs.get("pages", None)
 
             # Process PDF using optimized DeepSeek approach
-            raw_output, markdown_result = self._process_pdf_with_deepseek(pdf_path, selected_pages)
+            raw_output, markdown_result = self._process_pdf_with_deepseek(
+                pdf_path, selected_pages
+            )
 
             # Generate bounding boxes image (placeholder for now)
-            boxes_image = ""  # PDF bounding box visualization would be more complex
+            boxes_image = (
+                ""  # PDF bounding box visualization would be more complex
+            )
 
             processing_time = time.time() - start_time
 
@@ -243,7 +258,7 @@ class DeepSeekOCRBackend(OCRBackend):
                 source_markdown=markdown_result,
                 boxes_image=boxes_image,
                 processing_time=processing_time,
-                image_name=Path(pdf_path).name
+                image_name=Path(pdf_path).name,
             )
 
         except Exception as e:
@@ -256,7 +271,7 @@ class DeepSeekOCRBackend(OCRBackend):
                 raw_result={"deepseek": "", "mineru": {}},
                 markdown=f"PDF processing failed: {str(e)}",
                 processing_time=processing_time,
-                image_name=Path(pdf_path).name
+                image_name=Path(pdf_path).name,
             )
 
     def get_health_status(self) -> Dict[str, Any]:
@@ -267,14 +282,20 @@ class DeepSeekOCRBackend(OCRBackend):
             dict: Health information including model_loaded, gpu_available, etc.
         """
         return {
-            "status": "healthy" if self.model_loaded and self.gpu_available else "unhealthy",
+            "status": (
+                "healthy"
+                if self.model_loaded and self.gpu_available
+                else "unhealthy"
+            ),
             "model_loaded": self.model_loaded,
             "gpu_available": self.gpu_available,
             "backend": "deepseek-ocr",
-            "timestamp": time.time()
+            "timestamp": time.time(),
         }
 
-    def _process_pdf_with_deepseek(self, pdf_path: str, selected_pages: List[int] = None) -> Tuple[Dict[str, Any], str]:
+    def _process_pdf_with_deepseek(
+        self, pdf_path: str, selected_pages: List[int] = None
+    ) -> Tuple[Dict[str, Any], str]:
         """
         Process PDF using optimized DeepSeek approach with parallel page processing.
 
@@ -299,7 +320,9 @@ class DeepSeekOCRBackend(OCRBackend):
                 pages_to_process = list(range(len(doc)))
             else:
                 # Convert to 0-indexed and validate
-                pages_to_process = [p-1 for p in selected_pages if 1 <= p <= len(doc)]
+                pages_to_process = [
+                    p - 1 for p in selected_pages if 1 <= p <= len(doc)
+                ]
 
             if not pages_to_process:
                 raise ValueError("No valid pages selected for processing")
@@ -320,15 +343,21 @@ class DeepSeekOCRBackend(OCRBackend):
 
             # Process images in parallel using ThreadPoolExecutor
             batch_inputs = []
-            with ThreadPoolExecutor(max_workers=min(len(images), 4)) as executor:
+            with ThreadPoolExecutor(
+                max_workers=min(len(images), 4)
+            ) as executor:
                 # Prepare batch inputs
                 for image in images:
                     from process.image_process import DeepseekOCRProcessor
+
                     cache_item = {
                         "prompt": DEEPSEEK_PROMPT,
                         "multi_modal_data": {
                             "image": DeepseekOCRProcessor().tokenize_with_images(
-                                images=[image], bos=True, eos=True, cropping=CROP_MODE
+                                images=[image],
+                                bos=True,
+                                eos=True,
+                                cropping=CROP_MODE,
                             )
                         },
                     }
@@ -337,15 +366,15 @@ class DeepSeekOCRBackend(OCRBackend):
             # Generate OCR results for all pages
             from vllm import SamplingParams
             from process.ngram_norepeat import NoRepeatNGramLogitsProcessor
+
             sampling_params = SamplingParams(
                 temperature=0.1,
                 top_p=0.9,
                 max_tokens=4096,
-                logits_processors=[NoRepeatNGramLogitsProcessor(ngram_size=3)]
+                logits_processors=[NoRepeatNGramLogitsProcessor(ngram_size=3)],
             )
             outputs_list = self.engine.generate(
-                batch_inputs,
-                sampling_params=sampling_params
+                batch_inputs, sampling_params=sampling_params
             )
 
             # Combine results from all pages
@@ -356,23 +385,22 @@ class DeepSeekOCRBackend(OCRBackend):
                 content = output.outputs[0].text
 
                 # Clean up the output
-                if '<|endoftext|>' in content:
-                    content = content.replace('<|endoftext|>', '')
+                if "<|endoftext|>" in content:
+                    content = content.replace("<|endoftext|>", "")
 
                 # Add page separator
-                page_separator = f'\n<--- Page {page_num + 1} --->\n'
+                page_separator = f"\n<--- Page {page_num + 1} --->\n"
                 all_contents.append(content + page_separator)
-                raw_outputs.append({
-                    "page": page_num + 1,
-                    "raw_output": content
-                })
+                raw_outputs.append(
+                    {"page": page_num + 1, "raw_output": content}
+                )
 
             # Combine all page results
             markdown_content = "\n".join(all_contents)
             raw_output = {
                 "pages": raw_outputs,
                 "total_pages": len(pages_to_process),
-                "processed_pages": [p + 1 for p in pages_to_process]
+                "processed_pages": [p + 1 for p in pages_to_process],
             }
 
             return raw_output, markdown_content
@@ -396,7 +424,9 @@ class DeepSeekOCRBackend(OCRBackend):
         self.model_loaded = False
         print("DeepSeek backend resources cleaned up")
 
-    def _process_image_with_deepseek(self, image: Image.Image, **kwargs) -> str:
+    def _process_image_with_deepseek(
+        self, image: Image.Image, **kwargs
+    ) -> str:
         """
         Process image through DeepSeek OCR model.
 
@@ -422,16 +452,13 @@ class DeepSeekOCRBackend(OCRBackend):
 
             # Process image using DeepSeek OCR processor - EXACTLY like reference
             image_features = DeepseekOCRProcessor().tokenize_with_images(
-                images=[image],
-                bos=True,
-                eos=True,
-                cropping=CROP_MODE
+                images=[image], bos=True, eos=True, cropping=CROP_MODE
             )
 
             # Create request exactly like reference implementation
             request = {
                 "prompt": DEEPSEEK_PROMPT,
-                "multi_modal_data": {"image": image_features}
+                "multi_modal_data": {"image": image_features},
             }
 
             # Prepare sampling parameters
@@ -439,16 +466,14 @@ class DeepSeekOCRBackend(OCRBackend):
                 temperature=0.1,
                 top_p=0.9,
                 max_tokens=4096,
-                logits_processors=[NoRepeatNGramLogitsProcessor(ngram_size=3)]
+                logits_processors=[NoRepeatNGramLogitsProcessor(ngram_size=3)],
             )
 
             # Generate OCR output using vLLM engine - EXACTLY like reference
             request_id = f"ocr_{int(time.time())}"
 
             async for request_output in self.engine.generate(
-                request,
-                sampling_params=sampling_params,
-                request_id=request_id
+                request, sampling_params=sampling_params, request_id=request_id
             ):
                 if request_output.outputs:
                     full_text = request_output.outputs[0].text
@@ -458,7 +483,9 @@ class DeepSeekOCRBackend(OCRBackend):
 
         try:
             # Run async generation with timeout
-            final_output = asyncio.run(asyncio.wait_for(generate_ocr(), timeout=120.0))
+            final_output = asyncio.run(
+                asyncio.wait_for(generate_ocr(), timeout=120.0)
+            )
             return final_output
 
         except asyncio.TimeoutError:
@@ -484,19 +511,27 @@ class DeepSeekOCRBackend(OCRBackend):
             return ""
 
         # Extract text between <|ref|> and <|/ref|> markers (excluding image references)
-        pattern = r'<\|ref\|>(?!image)(.*?)<\|/ref\|>'
+        pattern = r"<\|ref\|>(?!image)(.*?)<\|/ref\|>"
         matches = re.findall(pattern, raw_output, re.DOTALL)
 
         # Combine all text matches
-        markdown_text = "\n\n".join([match.strip() for match in matches if match.strip()])
+        markdown_text = "\n\n".join(
+            [match.strip() for match in matches if match.strip()]
+        )
 
         # Clean up extra whitespace
-        markdown_text = re.sub(r'\n\s*\n', '\n\n', markdown_text)
+        markdown_text = re.sub(r"\n\s*\n", "\n\n", markdown_text)
         markdown_text = markdown_text.strip()
 
-        return markdown_text if markdown_text else "No text extracted from OCR output"
+        return (
+            markdown_text
+            if markdown_text
+            else "No text extracted from OCR output"
+        )
 
-    def _generate_boxes_image(self, image: Image.Image, raw_output: str) -> str:
+    def _generate_boxes_image(
+        self, image: Image.Image, raw_output: str
+    ) -> str:
         """
         Generate base64-encoded image with bounding boxes.
 
@@ -517,7 +552,7 @@ class DeepSeekOCRBackend(OCRBackend):
         try:
             # Extract bounding boxes from <|ref|> and <|det|> tags
             boxes = []
-            pattern = r'(<\|ref\|>(.*?)<\|/ref\|><\|det\|>(.*?)<\|/det\|>)'
+            pattern = r"(<\|ref\|>(.*?)<\|/ref\|><\|det\|>(.*?)<\|/det\|>)"
             matches = re.findall(pattern, raw_output, re.DOTALL)
 
             for match in matches:
@@ -526,15 +561,19 @@ class DeepSeekOCRBackend(OCRBackend):
                     det_text = match[2]  # Content between <|det|> and <|/det|>
 
                     # Extract coordinates from <|det|>[[x1,y1,x2,y2]]<|/det|>
-                    if det_text.startswith('[[') and det_text.endswith(']]'):
+                    if det_text.startswith("[[") and det_text.endswith("]]"):
                         coords_text = det_text[2:-2]  # Remove [[ and ]]
-                        coords = [int(x.strip()) for x in coords_text.split(',')]
+                        coords = [
+                            int(x.strip()) for x in coords_text.split(",")
+                        ]
                         if len(coords) == 4:
                             x1, y1, x2, y2 = coords
-                            boxes.append({
-                                'coordinates': [x1, y1, x2, y2],
-                                'label': ref_text if ref_text else 'text'
-                            })
+                            boxes.append(
+                                {
+                                    "coordinates": [x1, y1, x2, y2],
+                                    "label": ref_text if ref_text else "text",
+                                }
+                            )
                 except Exception as e:
                     print(f"Error parsing bounding box: {e}")
                     continue
@@ -548,7 +587,7 @@ class DeepSeekOCRBackend(OCRBackend):
             draw = ImageDraw.Draw(img_draw)
 
             # Create semi-transparent overlay
-            overlay = Image.new('RGBA', img_draw.size, (0, 0, 0, 0))
+            overlay = Image.new("RGBA", img_draw.size, (0, 0, 0, 0))
             draw2 = ImageDraw.Draw(overlay)
 
             # Try to load font, fallback to default
@@ -559,8 +598,8 @@ class DeepSeekOCRBackend(OCRBackend):
 
             for i, box_info in enumerate(boxes):
                 try:
-                    coordinates = box_info['coordinates']
-                    label = box_info['label']
+                    coordinates = box_info["coordinates"]
+                    label = box_info["label"]
 
                     if len(coordinates) == 4:
                         x1, y1, x2, y2 = coordinates
@@ -572,12 +611,23 @@ class DeepSeekOCRBackend(OCRBackend):
                         y2 = int(y2 / 999 * image_height)
 
                         # Generate random color for each box
-                        color = (np.random.randint(0, 200), np.random.randint(0, 200), np.random.randint(0, 255))
+                        color = (
+                            np.random.randint(0, 200),
+                            np.random.randint(0, 200),
+                            np.random.randint(0, 255),
+                        )
                         color_a = color + (20,)  # Semi-transparent version
 
                         # Draw bounding box with semi-transparent fill
-                        draw.rectangle([x1, y1, x2, y2], outline=color, width=2)
-                        draw2.rectangle([x1, y1, x2, y2], fill=color_a, outline=(0, 0, 0, 0), width=1)
+                        draw.rectangle(
+                            [x1, y1, x2, y2], outline=color, width=2
+                        )
+                        draw2.rectangle(
+                            [x1, y1, x2, y2],
+                            fill=color_a,
+                            outline=(0, 0, 0, 0),
+                            width=1,
+                        )
 
                         # Add label text with background
                         text_x = x1
@@ -588,12 +638,23 @@ class DeepSeekOCRBackend(OCRBackend):
                             text_width = text_bbox[2] - text_bbox[0]
                             text_height = text_bbox[3] - text_bbox[1]
 
-                            draw.rectangle([text_x, text_y, text_x + text_width, text_y + text_height],
-                                        fill=(255, 255, 255, 30))
-                            draw.text((text_x, text_y), label, font=font, fill=color)
+                            draw.rectangle(
+                                [
+                                    text_x,
+                                    text_y,
+                                    text_x + text_width,
+                                    text_y + text_height,
+                                ],
+                                fill=(255, 255, 255, 30),
+                            )
+                            draw.text(
+                                (text_x, text_y), label, font=font, fill=color
+                            )
                         except:
                             # Fallback if font measurement fails
-                            draw.text((text_x, text_y), label, font=font, fill=color)
+                            draw.text(
+                                (text_x, text_y), label, font=font, fill=color
+                            )
                 except Exception as e:
                     print(f"Error drawing box {i}: {e}")
                     continue
@@ -603,9 +664,9 @@ class DeepSeekOCRBackend(OCRBackend):
 
             # Convert to base64
             buffer = io.BytesIO()
-            img_draw.save(buffer, format='PNG')
+            img_draw.save(buffer, format="PNG")
             buffer.seek(0)
-            image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            image_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
 
             return image_base64
 
@@ -635,13 +696,13 @@ def initialize_backend():
         print("✗ Failed to initialize DeepSeek backend")
 
 
-@app.route('/ocr/image', methods=['POST'])
+@app.route("/ocr/image", methods=["POST"])
 def ocr_image():
     """Process single image OCR request"""
-    if 'image' not in request.files:
+    if "image" not in request.files:
         return jsonify({"error": "No image file provided"}), 400
 
-    image_file = request.files['image']
+    image_file = request.files["image"]
 
     # Save uploaded file temporarily
     temp_path = f"/tmp/{image_file.filename}"
@@ -661,13 +722,13 @@ def ocr_image():
             pass
 
 
-@app.route('/ocr/pdf', methods=['POST'])
+@app.route("/ocr/pdf", methods=["POST"])
 def ocr_pdf():
     """Process PDF OCR request"""
-    if 'pdf' not in request.files:
+    if "pdf" not in request.files:
         return jsonify({"error": "No PDF file provided"}), 400
 
-    pdf_file = request.files['pdf']
+    pdf_file = request.files["pdf"]
 
     # Save uploaded file temporarily
     temp_path = f"/tmp/{pdf_file.filename}"
@@ -687,26 +748,29 @@ def ocr_pdf():
             pass
 
 
-@app.route('/health', methods=['GET'])
+@app.route("/health", methods=["GET"])
 def health_check():
     """Health check endpoint"""
     if backend:
         status = backend.get_health_status()
         return jsonify(status)
     else:
-        return jsonify({
-            "status": "unhealthy",
-            "model_loaded": False,
-            "gpu_available": False,
-            "backend": "deepseek-ocr",
-            "timestamp": time.time()
-        })
+        return jsonify(
+            {
+                "status": "unhealthy",
+                "model_loaded": False,
+                "gpu_available": False,
+                "backend": "deepseek-ocr",
+                "timestamp": time.time(),
+            }
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Initialize backend on startup
     initialize_backend()
 
     # Start Flask server on port 5000
     print("Starting DeepSeek OCR backend server on port 5000...")
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    app.run(host="0.0.0.0", port=5000, debug=False)
+

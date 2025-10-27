@@ -23,13 +23,14 @@ app = Flask(__name__)
 # Global backend instance
 backend = None
 
-@app.route('/ocr/image', methods=['POST'])
+
+@app.route("/ocr/image", methods=["POST"])
 def ocr_image():
     """Process single image OCR request"""
-    if 'image' not in request.files:
+    if "image" not in request.files:
         return jsonify({"error": "No image file provided"}), 400
 
-    image_file = request.files['image']
+    image_file = request.files["image"]
 
     # Save uploaded file temporarily
     temp_path = f"/tmp/{image_file.filename}"
@@ -48,13 +49,14 @@ def ocr_image():
         except:
             pass
 
-@app.route('/ocr/pdf', methods=['POST'])
+
+@app.route("/ocr/pdf", methods=["POST"])
 def ocr_pdf():
     """Process PDF OCR request"""
-    if 'pdf' not in request.files:
+    if "pdf" not in request.files:
         return jsonify({"error": "No PDF file provided"}), 400
 
-    pdf_file = request.files['pdf']
+    pdf_file = request.files["pdf"]
 
     # Save uploaded file temporarily
     temp_path = f"/tmp/{pdf_file.filename}"
@@ -73,22 +75,26 @@ def ocr_pdf():
         except:
             pass
 
-@app.route('/health', methods=['GET'])
+
+@app.route("/health", methods=["GET"])
 def health_check():
     """Health check endpoint"""
     if backend:
         status = backend.get_health_status()
         return jsonify(status)
     else:
-        return jsonify({
-            "status": "unhealthy",
-            "model_loaded": False,
-            "gpu_available": False,
-            "backend": "deepseek-ocr",
-            "timestamp": time.time()
-        })
+        return jsonify(
+            {
+                "status": "unhealthy",
+                "model_loaded": False,
+                "gpu_available": False,
+                "backend": "deepseek-ocr",
+                "timestamp": time.time(),
+            }
+        )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     # Initialize backend on startup
     # Model path from deployment setup
     model_path = "../../models/deepseek-ocr"
@@ -101,4 +107,5 @@ if __name__ == '__main__':
 
     # Start Flask server on port 5000
     print("Starting DeepSeek OCR backend server on port 5000...")
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    app.run(host="0.0.0.0", port=5000, debug=False)
+

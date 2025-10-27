@@ -177,10 +177,14 @@ class DeepseekOCRProcessor(ProcessorMixin):
         if tokenizer is None:
             from transformers import AutoTokenizer
             from config import MODEL_PATH
+
+            # NOTE: next executed line here
             print(f"✓ Initializing tokenizer from {MODEL_PATH}")
             print(f"✓ Current working directory: {os.getcwd()}")
             print(f"✓ Model path exists: {os.path.exists(MODEL_PATH)}")
-            tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, trust_remote_code=True)
+            tokenizer = AutoTokenizer.from_pretrained(
+                MODEL_PATH, trust_remote_code=True
+            )
 
         self.tokenizer = tokenizer
 
