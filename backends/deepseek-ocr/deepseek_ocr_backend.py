@@ -20,14 +20,14 @@ from flask import Flask, request, jsonify
 from shared.ocr_backend import OCRBackend
 from shared.api_contract import create_unified_response
 
+# Import config for image processing (same as official code)
+from process.config import BASE_SIZE, IMAGE_SIZE, CROP_MODE
+
 # Set vLLM to use legacy API (compatible with DeepSeek OCR)
 os.environ["VLLM_USE_V1"] = "0"
 
 # Configuration
 DEEPSEEK_PROMPT = "<image>\n<|grounding|>Convert the document to markdown."
-CROP_MODE = True
-BASE_SIZE = 1024
-IMAGE_SIZE = 640
 
 
 class DeepSeekOCRBackend(OCRBackend):
@@ -356,8 +356,6 @@ class DeepSeekOCRBackend(OCRBackend):
                                 bos=True,
                                 eos=True,
                                 cropping=CROP_MODE,
-                                base_size=BASE_SIZE,
-                                image_size=IMAGE_SIZE,
                             )
                         },
                     }
