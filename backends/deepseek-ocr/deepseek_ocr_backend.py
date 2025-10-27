@@ -389,14 +389,15 @@ class DeepSeekOCRBackend(OCRBackend):
             from process.ngram_norepeat import NoRepeatNGramLogitsProcessor
 
             sampling_params = SamplingParams(
-                temperature=0.1,
-                top_p=0.9,
+                temperature=0.0,
+                top_p=1.0,
                 max_tokens=4096,
                 logits_processors=[NoRepeatNGramLogitsProcessor(
                     ngram_size=30,
                     window_size=90,
                     whitelist_token_ids={128821, 128822}
                 )],
+                skip_special_tokens=False
             )
             outputs_list = self.engine.generate(
                 batch_inputs, sampling_params=sampling_params
@@ -488,14 +489,15 @@ class DeepSeekOCRBackend(OCRBackend):
 
             # Prepare sampling parameters
             sampling_params = SamplingParams(
-                temperature=0.1,
-                top_p=0.9,
+                temperature=0.0,
+                top_p=1.0,
                 max_tokens=4096,
                 logits_processors=[NoRepeatNGramLogitsProcessor(
                     ngram_size=30,
                     window_size=90,
                     whitelist_token_ids={128821, 128822}
                 )],
+                skip_special_tokens=False
             )
 
             # Generate OCR output using vLLM engine - EXACTLY like reference
