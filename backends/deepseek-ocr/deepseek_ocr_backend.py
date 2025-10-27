@@ -83,8 +83,7 @@ class DeepSeekOCRBackend(OCRBackend):
 
             # Import required modules (lazy imports to avoid dependency issues)
             try:
-                from vllm import AsyncLLMEngine, SamplingParams
-                from vllm.engine.arg_utils import AsyncEngineArgs
+                from vllm import LLM, SamplingParams
                 from vllm.model_executor.models.registry import ModelRegistry
 
                 from deepseek_ocr import DeepseekOCRForCausalLM
@@ -109,7 +108,7 @@ class DeepSeekOCRBackend(OCRBackend):
 
             # Initialize vLLM engine - EXACTLY like reference implementation
             print("✓ Initializing vLLM engine...")
-            engine_args = AsyncEngineArgs(
+            self.engine = LLM(
                 model=str(self.model_path),
                 hf_overrides={"architectures": ["DeepseekOCRForCausalLM"]},
                 tokenizer=str(self.model_path),
@@ -125,10 +124,6 @@ class DeepSeekOCRBackend(OCRBackend):
                 trust_remote_code=True,
                 disable_custom_all_reduce=True,
             )
-
-            print("✓ Creating AsyncLLMEngine...")
-            ## last executed LINE HERE
-            self.engine = AsyncLLMEngine.from_engine_args(engine_args)
             print("✓ vLLM engine initialization successful")
 
             # Test processor creation to catch initialization errors early
@@ -381,9 +376,8 @@ class DeepSeekOCRBackend(OCRBackend):
             )
 
             # Use synchronous generation for PDF processing like official code
-            # Add unique request IDs for each batch input
             outputs_list = self.engine.generate(
-                batch_inputs, sampling_params=sampling_params, request_id=[f"pdf_page_{i}" for i in range(len(batch_inputs))]
+                batch_inputs, sampling_params=sampling_params
             )
 
             # Process results using official approach
