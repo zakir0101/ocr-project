@@ -381,8 +381,9 @@ class DeepSeekOCRBackend(OCRBackend):
             )
 
             # Use synchronous generation for PDF processing like official code
+            # Add unique request IDs for each batch input
             outputs_list = self.engine.generate(
-                batch_inputs, sampling_params=sampling_params
+                batch_inputs, sampling_params=sampling_params, request_id=[f"pdf_page_{i}" for i in range(len(batch_inputs))]
             )
 
             # Process results using official approach
