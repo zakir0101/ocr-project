@@ -26,6 +26,8 @@ os.environ["VLLM_USE_V1"] = "0"
 # Configuration
 DEEPSEEK_PROMPT = "<image>\n<|grounding|>Convert the document to markdown."
 CROP_MODE = True
+BASE_SIZE = 1024
+IMAGE_SIZE = 640
 
 
 class DeepSeekOCRBackend(OCRBackend):
@@ -354,6 +356,8 @@ class DeepSeekOCRBackend(OCRBackend):
                                 bos=True,
                                 eos=True,
                                 cropping=CROP_MODE,
+                                base_size=BASE_SIZE,
+                                image_size=IMAGE_SIZE,
                             )
                         },
                     }
