@@ -23,13 +23,14 @@ app = Flask(__name__)
 # Global backend instance
 backend = None
 
-@app.route('/ocr/image', methods=['POST'])
+
+@app.route("/ocr/image", methods=["POST"])
 def ocr_image():
     """Process single image OCR request"""
-    if 'image' not in request.files:
+    if "image" not in request.files:
         return jsonify({"error": "No image file provided"}), 400
 
-    image_file = request.files['image']
+    image_file = request.files["image"]
 
     # Save uploaded file temporarily
     temp_path = f"/tmp/{image_file.filename}"
@@ -48,13 +49,14 @@ def ocr_image():
         except:
             pass
 
-@app.route('/ocr/pdf', methods=['POST'])
+
+@app.route("/ocr/pdf", methods=["POST"])
 def ocr_pdf():
     """Process PDF OCR request"""
-    if 'pdf' not in request.files:
+    if "pdf" not in request.files:
         return jsonify({"error": "No PDF file provided"}), 400
 
-    pdf_file = request.files['pdf']
+    pdf_file = request.files["pdf"]
 
     # Save uploaded file temporarily
     temp_path = f"/tmp/{pdf_file.filename}"
@@ -63,7 +65,7 @@ def ocr_pdf():
     try:
         # Process PDF with backend
         result = backend.ocr_pdf(temp_path)
-        return jsonify(result)
+        return jsonify(result), 200 if result.get("success") else 400
     except Exception as e:
         return jsonify({"error": f"PDF processing failed: {str(e)}"}), 500
     finally:
@@ -73,7 +75,8 @@ def ocr_pdf():
         except:
             pass
 
-@app.route('/images/<image_id>', methods=['GET'])
+
+@app.route("/images/<image_id>", methods=["GET"])
 def serve_image(image_id):
     """Serve images from Mineru processing"""
     try:
@@ -81,28 +84,32 @@ def serve_image(image_id):
         # For now, serve from a common images directory
         image_path = Path("outputs") / "images" / f"{image_id}"
         if image_path.exists():
-            return send_file(image_path, mimetype='image/jpeg')
+            return send_file(image_path, mimetype="image/jpeg")
         else:
-            return jsonify({'error': 'Image not found'}), 404
+            return jsonify({"error": "Image not found"}), 404
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
-@app.route('/health', methods=['GET'])
+
+@app.route("/health", methods=["GET"])
 def health_check():
     """Health check endpoint"""
     if backend:
         status = backend.get_health_status()
         return jsonify(status)
     else:
-        return jsonify({
-            "status": "unhealthy",
-            "model_loaded": False,
-            "gpu_available": False,
-            "backend": "mineru",
-            "timestamp": time.time()
-        })
+        return jsonify(
+            {
+                "status": "unhealthy",
+                "model_loaded": False,
+                "gpu_available": False,
+                "backend": "mineru",
+                "timestamp": time.time(),
+            }
+        )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     # Initialize backend on startup
     # Model path from deployment setup
     model_path = "../models/mineru"
@@ -115,4 +122,5 @@ if __name__ == '__main__':
 
     # Start Flask server on port 5001
     print("Starting Mineru backend server on port 5001...")
-    app.run(host='0.0.0.0', port=5001, debug=False)
+    app.run(host="0.0.0.0", port=5001, debug=False)
+

@@ -65,7 +65,7 @@ def ocr_pdf():
     try:
         # Process PDF with backend
         result = backend.ocr_pdf(temp_path)
-        return jsonify(result)
+        return jsonify(result), 200 if result.get("success") else 400
     except Exception as e:
         return jsonify({"error": f"PDF processing failed: {str(e)}"}), 500
     finally:
@@ -82,11 +82,11 @@ def serve_cropped_image(image_id):
     try:
         image_path = Path("outputs") / "images" / f"{image_id}.jpg"
         if image_path.exists():
-            return send_file(image_path, mimetype='image/jpeg')
+            return send_file(image_path, mimetype="image/jpeg")
         else:
-            return jsonify({'error': 'Cropped image not found'}), 404
+            return jsonify({"error": "Cropped image not found"}), 404
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/health", methods=["GET"])
@@ -121,4 +121,3 @@ if __name__ == "__main__":
     # Start Flask server on port 5000
     print("Starting DeepSeek OCR backend server on port 5000...")
     app.run(host="0.0.0.0", port=5000, debug=False)
-

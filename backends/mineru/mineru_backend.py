@@ -33,7 +33,7 @@ class MineruBackend(OCRBackend):
     """
     Mineru backend implementation using the OCRBackend interface.
 
-    This backend uses GPU 1 exclusively and implements all required
+    This backend uses GPU 0 exclusively and implements all required
     abstract methods from the OCRBackend interface.
     """
 
@@ -53,7 +53,7 @@ class MineruBackend(OCRBackend):
         self.gpu_available = False
 
         # Set GPU isolation for Mineru backend
-        os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
         print(f"MineruBackend initialized with model_path: {model_path}")
         print(
@@ -62,13 +62,13 @@ class MineruBackend(OCRBackend):
 
     def load_model(self) -> bool:
         """
-        Load Mineru model into GPU 1 memory.
+        Load Mineru model into GPU 0 memory.
 
         Returns:
             bool: True if model loaded successfully, False otherwise
         """
         try:
-            print("Loading Mineru model into GPU 1 memory...")
+            print("Loading Mineru model into GPU 0 memory...")
 
             # Check if CUDA is available
             if not torch.cuda.is_available():
@@ -116,7 +116,7 @@ class MineruBackend(OCRBackend):
                 return False
 
             self.model_loaded = True
-            print("✓ Mineru model loaded successfully into GPU 1")
+            print("✓ Mineru model loaded successfully into GPU 0")
             return True
 
         except Exception as e:
@@ -153,10 +153,8 @@ class MineruBackend(OCRBackend):
                 output_dir.mkdir(exist_ok=True)
 
                 # Process the image using Mineru pipeline
-                raw_output, rendered_html = (
-                    self._process_with_mineru_pipeline(
-                        image_path, output_dir, **kwargs
-                    )
+                raw_output, rendered_html = self._process_with_mineru_pipeline(
+                    image_path, output_dir, **kwargs
                 )
 
                 # Generate bounding boxes image (placeholder for now)
@@ -218,10 +216,8 @@ class MineruBackend(OCRBackend):
                 output_dir.mkdir(exist_ok=True)
 
                 # Process the PDF using Mineru pipeline
-                raw_output, rendered_html = (
-                    self._process_with_mineru_pipeline(
-                        pdf_path, output_dir, **kwargs
-                    )
+                raw_output, rendered_html = self._process_with_mineru_pipeline(
+                    pdf_path, output_dir, **kwargs
                 )
 
                 # Generate bounding boxes image (placeholder for now)
@@ -387,7 +383,9 @@ class MineruBackend(OCRBackend):
                 )
 
                 # Process markdown to convert image links to HTML img tags
-                rendered_html = self._convert_markdown_images_to_html(markdown_content, image_dir)
+                rendered_html = self._convert_markdown_images_to_html(
+                    markdown_content, image_dir
+                )
 
                 # Fix line breaks - ensure proper paragraph spacing
                 rendered_html = self._fix_line_breaks(rendered_html)
@@ -440,7 +438,9 @@ class MineruBackend(OCRBackend):
         # would require more complex integration with Mineru's bbox drawing
         return ""
 
-    def _convert_markdown_images_to_html(self, markdown_content: str, image_dir: str) -> str:
+    def _convert_markdown_images_to_html(
+        self, markdown_content: str, image_dir: str
+    ) -> str:
         """
         Convert markdown image links to HTML img tags for proper rendering.
 
@@ -458,16 +458,20 @@ class MineruBackend(OCRBackend):
         if not markdown_content:
             return markdown_content
 
-        print(f"🔍 DEBUG: Converting markdown images to HTML, image_dir: {image_dir}")
+        print(
+            f"🔍 DEBUG: Converting markdown images to HTML, image_dir: {image_dir}"
+        )
 
         # Pattern to match markdown image syntax: ![alt](url)
-        pattern = r'!\[([^\]]*)\]\(([^\)]+)\)'
+        pattern = r"!\[([^\]]*)\]\(([^\)]+)\)"
 
         def replace_image_match(match):
             alt_text = match.group(1)
             image_url = match.group(2)
 
-            print(f"🔍 DEBUG: Found image: alt='{alt_text}', url='{image_url}'")
+            print(
+                f"🔍 DEBUG: Found image: alt='{alt_text}', url='{image_url}'"
+            )
 
             # Extract image filename from URL
             image_filename = os.path.basename(image_url)
@@ -484,9 +488,13 @@ class MineruBackend(OCRBackend):
                 return match.group(0)  # Return original if image not found
 
         # Replace all markdown image links with HTML img tags
-        processed_content = re.sub(pattern, replace_image_match, markdown_content)
+        processed_content = re.sub(
+            pattern, replace_image_match, markdown_content
+        )
 
-        print(f"🔍 DEBUG: Image conversion completed. Original length: {len(markdown_content)}, Processed length: {len(processed_content)}")
+        print(
+            f"🔍 DEBUG: Image conversion completed. Original length: {len(markdown_content)}, Processed length: {len(processed_content)}"
+        )
 
         return processed_content
 
@@ -507,11 +515,11 @@ class MineruBackend(OCRBackend):
 
         # Ensure proper spacing between paragraphs
         # Replace multiple newlines with exactly two newlines (standard markdown paragraph separation)
-        markdown_content = re.sub(r'\n{3,}', '\n\n', markdown_content)
+        markdown_content = re.sub(r"\n{3,}", "\n\n", markdown_content)
 
         # Ensure single newlines at the end of paragraphs are preserved
         # This helps maintain the structure while preventing excessive spacing
-        markdown_content = re.sub(r'(?<!\n)\n(?!\n)', '\n\n', markdown_content)
+        markdown_content = re.sub(r"(?<!\n)\n(?!\n)", "\n\n", markdown_content)
 
         # Clean up any remaining spacing issues
         markdown_content = markdown_content.strip()
@@ -534,7 +542,9 @@ class MineruBackend(OCRBackend):
             serving_dir = Path("outputs") / "images"
             serving_dir.mkdir(parents=True, exist_ok=True)
 
-            print(f"🔍 DEBUG: Copying images from {image_dir} to {serving_dir}")
+            print(
+                f"🔍 DEBUG: Copying images from {image_dir} to {serving_dir}"
+            )
 
             # Copy all image files from temporary directory to serving directory
             temp_dir = Path(image_dir)
@@ -543,9 +553,13 @@ class MineruBackend(OCRBackend):
                     if image_file.is_file():
                         dest_path = serving_dir / image_file.name
                         shutil.copy2(image_file, dest_path)
-                        print(f"🔍 DEBUG: Copied {image_file.name} to serving location")
+                        print(
+                            f"🔍 DEBUG: Copied {image_file.name} to serving location"
+                        )
             else:
-                print(f"🔍 DEBUG: Temporary image directory {image_dir} does not exist")
+                print(
+                    f"🔍 DEBUG: Temporary image directory {image_dir} does not exist"
+                )
 
         except Exception as e:
             print(f"🔍 DEBUG: Error copying images to serving location: {e}")
@@ -567,8 +581,8 @@ class MineruBackend(OCRBackend):
             return html_content
 
         # Convert double newlines to <br><br> (paragraph breaks)
-        html_content = re.sub(r'\n\s*\n', '<br><br>', html_content)
+        html_content = re.sub(r"\n\s*\n", "<br><br>", html_content)
         # Convert single newlines to <br> (line breaks)
-        html_content = re.sub(r'\n', '<br>', html_content)
+        html_content = re.sub(r"\n", "<br>", html_content)
 
         return html_content
