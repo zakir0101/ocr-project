@@ -23,7 +23,7 @@ from shared.api_contract import create_unified_response
 
 # Set vLLM to use legacy API (compatible with DeepSeek OCR)
 os.environ["VLLM_USE_V1"] = "0"
-# No GPU isolation - uses all available GPUs
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 # Configuration
 DEEPSEEK_PROMPT = "<image>\n<|grounding|>Convert the document to markdown."
@@ -34,7 +34,7 @@ class DeepSeekOCRBackend(OCRBackend):
     """
     DeepSeek OCR backend implementation using the OCRBackend interface.
 
-    This backend uses all available GPUs and implements all required
+    This backend uses GPU 0 exclusively and implements all required
     abstract methods from the OCRBackend interface.
     """
 
@@ -52,18 +52,23 @@ class DeepSeekOCRBackend(OCRBackend):
         self.model_loaded = False
         self.gpu_available = False
 
+        # Set GPU isolation for DeepSeek backend
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+
         print(f"DeepSeekOCRBackend initialized with model_path: {model_path}")
-        print("✓ GPU access: All available GPUs")
+        print(
+            f"GPU isolation: CUDA_VISIBLE_DEVICES={os.environ.get('CUDA_VISIBLE_DEVICES')}"
+        )
 
     def load_model(self) -> bool:
         """
-        Load DeepSeek model into available GPU memory.
+        Load DeepSeek model into GPU 0 memory.
 
         Returns:
             bool: True if model loaded successfully, False otherwise
         """
         try:
-            print("Loading DeepSeek OCR model into available GPU memory...")
+            print("Loading DeepSeek OCR model into GPU 0 memory...")
 
             # Check if CUDA is available
             if not torch.cuda.is_available():
@@ -137,7 +142,7 @@ class DeepSeekOCRBackend(OCRBackend):
             )
 
             self.model_loaded = True
-            print("✓ DeepSeek OCR model loaded successfully into available GPUs")
+            print("✓ DeepSeek OCR model loaded successfully into GPU 0")
             return True
 
         except Exception as e:
