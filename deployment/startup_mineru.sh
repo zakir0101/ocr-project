@@ -27,7 +27,7 @@ echo "   ✅ Orchestrator started (PID: $ORCHESTRATOR_PID)"
 
 
 # Start Mineru backend
-echo "🔍 Starting Mineru backend on port 5001 (GPU 1)..."
+echo "🔍 Starting Mineru backend on port 5001..."
 cd "$PROJECT_ROOT/backends/mineru"
 source venv/bin/activate
 python3 server.py &

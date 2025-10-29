@@ -9,9 +9,8 @@ echo "=========================================="
 echo "Mineru Backend Setup"
 echo "=========================================="
 
-# Set GPU isolation for Mineru
-export CUDA_VISIBLE_DEVICES="1"
-echo "✓ Set CUDA_VISIBLE_DEVICES=1 for GPU isolation"
+# No GPU isolation - uses all available GPUs
+echo "✓ No GPU isolation - uses all available GPUs"
 
 # Create Mineru virtual environment
 echo "📦 Creating Mineru virtual environment..."
@@ -58,7 +57,7 @@ echo "=========================================="
 echo "   Virtual environment: ../backends/mineru/venv"
 echo "   Model directory: $MODEL_DIR"
 echo "   Server port: 5001"
-echo "   GPU: 1 (CUDA_VISIBLE_DEVICES=1)"
+echo "   GPU: All available GPUs (no isolation)"
 echo ""
 echo "Next steps:"
 echo "   1. Activate environment: source ../backends/mineru/venv/bin/activate"

@@ -20,17 +20,17 @@ This document provides essential information for Claude assistants to effectivel
 └─────────────────┘    └─────────────────┘    ├─────────────────┤
                                               │ DeepSeek Server │
                                               │  (localhost:5000) │
-                                              │  GPU: RTX 3090 #1 │
+                                              │  All Available GPUs │
                                               ├─────────────────┤
                                               │   Mineru Server  │
                                               │  (localhost:5001) │
-                                              │  GPU: RTX 3090 #2 │
+                                              │  All Available GPUs │
                                               └─────────────────┘
 ```
 
 ### **Current Implementation Status:**
 - **Phase 0: COMPLETED** - Common interface & project structure
-- **Phase 1: COMPLETED** - Backend isolation & GPU assignment
+- **Phase 1: COMPLETED** - Backend isolation & shared GPU access
 - **Phase 2: COMPLETED** - Orchestrator development
 - **Phase 3: COMPLETED** - Web client enhancement
 - **Phase 4: COMPLETED** - Response processing
@@ -179,14 +179,14 @@ curl -X POST -F "pdf=@test_document.pdf" -F "backend=deepseek-ocr" -F "pages=[1,
 ```
 ocr-project/
 ├── backends/
-│   ├── deepseek-ocr/           # DeepSeek backend (GPU 0)
+│   ├── deepseek-ocr/           # DeepSeek backend (All GPUs)
 │   │   ├── deepseek_ocr_backend.py  # OCRBackend implementation
 │   │   ├── server.py           # Flask server (port 5000)
 │   │   ├── requirements.txt    # DeepSeek-specific dependencies
 │   │   ├── process/            # DeepSeek OCR processing modules
 │   │   ├── deepencoder/        # DeepSeek vision encoder modules
 │   │   └── venv/               # DeepSeek virtual environment
-│   └── mineru/                 # Mineru backend (GPU 1)
+│   └── mineru/                 # Mineru backend (All GPUs)
 │       ├── mineru_backend.py   # OCRBackend implementation
 │       ├── server.py           # Flask server (port 5001)
 │       ├── requirements.txt    # Mineru-specific dependencies
@@ -215,8 +215,8 @@ ocr-project/
 ### **🎉 PROJECT COMPLETE - All Development Tasks Completed!**
 
 ### **Completed Features:**
-1. ✅ **DeepSeek Backend** - Running on GPU 0 (port 5000)
-2. ✅ **Mineru Backend** - Running on GPU 1 (port 5001)
+1. ✅ **DeepSeek Backend** - Running on all available GPUs (port 5000)
+2. ✅ **Mineru Backend** - Running on all available GPUs (port 5001)
 3. ✅ **Orchestrator Server** - Complete implementation (port 8080)
 4. ✅ **Web Client** - Enhanced with backend selection and comparison
 5. ✅ **PDF Support** - Multi-page PDF upload and processing
@@ -245,7 +245,7 @@ curl http://localhost:8080/backends  # All backend status
 
 ### **When Working on Backends:**
 - Each backend MUST implement the `OCRBackend` abstract class
-- Backends use dedicated GPUs via `CUDA_VISIBLE_DEVICES`
+- Backends share all available GPUs (no GPU isolation)
 - Backends should NOT have CORS - orchestrator handles frontend communication
 - Backend servers run on specific ports (5000 for DeepSeek, 5001 for Mineru)
 
@@ -335,7 +335,7 @@ curl http://localhost:8080/backends  # All backend status
 
 #### **GPU Memory Issues:**
 - **Symptom**: Model loading fails with CUDA out of memory
-- **Solution**: Ensure `CUDA_VISIBLE_DEVICES` is set correctly (0 for DeepSeek, 1 for Mineru)
+- **Solution**: Both backends share all available GPUs - monitor total GPU memory usage
 
 #### **Import Errors:**
 - **Symptom**: Missing modules when starting servers
@@ -403,7 +403,7 @@ When making significant changes:
 
 ---
 
-**Last Updated**: 2025-10-25
+**Last Updated**: 2025-10-29
 **Current Status**: ✅ **PROJECT COMPLETE** - All phases successfully implemented
 **Known Issues**: None - All components implemented and tested
 **Deployment Method**: `./deployment/deploy.sh` (configurable server parameters)
@@ -443,8 +443,8 @@ When making significant changes:
 
 #### **Service Architecture:**
 - **Orchestrator**: Port 8080 (main entry point)
-- **DeepSeek**: Port 5000 (GPU 0)
-- **Mineru**: Port 5001 (GPU 1)
+- **DeepSeek**: Port 5000 (All Available GPUs)
+- **Mineru**: Port 5001 (All Available GPUs)
 
 #### **Testing Coverage:**
 - ✅ Server health and model loading

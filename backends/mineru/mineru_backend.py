@@ -33,7 +33,7 @@ class MineruBackend(OCRBackend):
     """
     Mineru backend implementation using the OCRBackend interface.
 
-    This backend uses GPU 0 exclusively and implements all required
+    This backend uses all available GPUs and implements all required
     abstract methods from the OCRBackend interface.
     """
 
@@ -52,23 +52,20 @@ class MineruBackend(OCRBackend):
         self.model_loaded = False
         self.gpu_available = False
 
-        # Set GPU isolation for Mineru backend
-        os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+        # No GPU isolation - uses all available GPUs
 
         print(f"MineruBackend initialized with model_path: {model_path}")
-        print(
-            f"GPU isolation: CUDA_VISIBLE_DEVICES={os.environ.get('CUDA_VISIBLE_DEVICES')}"
-        )
+        print("✓ GPU access: All available GPUs")
 
     def load_model(self) -> bool:
         """
-        Load Mineru model into GPU 0 memory.
+        Load Mineru model into available GPU memory.
 
         Returns:
             bool: True if model loaded successfully, False otherwise
         """
         try:
-            print("Loading Mineru model into GPU 0 memory...")
+            print("Loading Mineru model into available GPU memory...")
 
             # Check if CUDA is available
             if not torch.cuda.is_available():
@@ -116,7 +113,7 @@ class MineruBackend(OCRBackend):
                 return False
 
             self.model_loaded = True
-            print("✓ Mineru model loaded successfully into GPU 0")
+            print("✓ Mineru model loaded successfully into available GPUs")
             return True
 
         except Exception as e:

@@ -26,7 +26,7 @@ ORCHESTRATOR_PID=$!
 echo "   ✅ Orchestrator started (PID: $ORCHESTRATOR_PID)"
 
 # Start DeepSeek backend
-echo "🤖 Starting DeepSeek backend on port 5000 (GPU 0)..."
+echo "🤖 Starting DeepSeek backend on port 5000..."
 cd "$PROJECT_ROOT/backends/deepseek-ocr"
 source venv/bin/activate
 python3 server.py &
