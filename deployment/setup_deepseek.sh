@@ -120,7 +120,9 @@ if [ "$MODEL_EXISTS" = true ]; then
 else
     # Download using huggingface_hub (exact reference implementation)
     echo "🚀 Downloading DeepSeek OCR model..."
-    python3 -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='deepseek-ai/DeepSeek-OCR', local_dir='$MODEL_DIR', local_dir_use_symlinks=False)"
+    python3 -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='zakir0101/ocr_model_b16', local_dir='$MODEL_DIR', local_dir_use_symlinks=False)"
+
+    # python3 -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='deepseek-ai/DeepSeek-OCR', local_dir='$MODEL_DIR', local_dir_use_symlinks=False)"
 fi
 
 # Verify installations
