@@ -1,15 +1,17 @@
-# DeepSeek OCR React Client
+# Multi-Backend OCR Web Client
 
-A modern React application for interacting with the DeepSeek OCR Flask server.
+A modern React application for interacting with the Multi-Backend OCR System. Supports DeepSeek-OCR and Mineru backends with comparison capabilities.
 
 ## Features
 
-- **Drag & Drop Interface**: Easy image upload with drag and drop support
-- **Real-time Preview**: Preview images before processing
+- **Multi-Backend Support**: Choose between DeepSeek-OCR, Mineru, or automatic selection
+- **Comparison View**: Side-by-side comparison of results from different backends
+- **Drag & Drop Interface**: Easy image and PDF upload with drag and drop support
+- **Real-time Preview**: Preview files before processing
 - **Markdown Rendering**: View OCR results as rendered markdown
 - **Source View**: Toggle between rendered markdown and source text
 - **Bounding Box Visualization**: See detected regions with bounding boxes
-- **Extracted Images Gallery**: View all extracted sub-images
+- **PDF Support**: Multi-page PDF upload and processing
 - **Responsive Design**: Works on desktop and mobile devices
 
 ## Setup
@@ -17,13 +19,16 @@ A modern React application for interacting with the DeepSeek OCR Flask server.
 ### Prerequisites
 
 - Node.js 16+ and npm
-- DeepSeek OCR Flask server running on `http://localhost:5000`
+- Multi-Backend OCR System running with:
+  - Orchestrator on `http://localhost:8080`
+  - DeepSeek backend on `http://localhost:5000`
+  - Mineru backend on `http://localhost:5001`
 
 ### Installation
 
 1. **Navigate to the web-client directory:**
    ```bash
-   cd DeepSeek-OCR-vllm/web-client
+   cd ocr-project/web-client
    ```
 
 2. **Install dependencies:**
@@ -43,32 +48,41 @@ A modern React application for interacting with the DeepSeek OCR Flask server.
 
 ## Usage
 
-1. **Upload Image**: Drag and drop an image file or click to select
-2. **Preview**: See the uploaded image before processing
-3. **Process**: Click "Extract Text" to send to the OCR server
-4. **View Results**:
-   - See the original image and image with bounding boxes
+1. **Select Backend**: Choose between DeepSeek-OCR, Mineru, or "Auto" (orchestrator decides)
+2. **Upload File**: Drag and drop an image or PDF file, or click to select
+3. **Preview**: See the uploaded file before processing
+4. **Process**: Click "Extract Text" to send to the selected backend
+5. **View Results**:
+   - See the original file and file with bounding boxes (images)
    - Toggle between rendered markdown and source view
    - Browse extracted sub-images
-5. **Process Another**: Click "Process Another Image" to start over
+   - Compare results side-by-side if using comparison mode
+6. **Process Another**: Click "Process Another File" to start over
 
 ## API Integration
 
-The client communicates with the Flask server through:
+The client communicates with the Orchestrator server (port 8080) which routes requests to the appropriate backend:
 
-- **POST /api/ocr/image**: Send image for OCR processing
-- **GET /images/{filename}**: Retrieve extracted images
-- **Proxy Configuration**: Vite dev server proxies API calls to Flask
+- **POST /ocr/image**: Send image for OCR processing (with backend parameter)
+- **POST /ocr/pdf**: Send PDF for OCR processing (with backend parameter)
+- **GET /health**: Check orchestrator and backend health
+- **GET /backends**: Get information about available backends
+- **Proxy Configuration**: Vite dev server proxies API calls to Orchestrator
 
 ## Project Structure
 
 ```
 web-client/
 ├── src/
-│   ├── App.jsx              # Main application component
+│   ├── App.jsx              # Main application component with backend selection
 │   ├── main.jsx             # React entry point
 │   ├── index.css            # Global styles
-│   └── components/          # Reusable components (future)
+│   ├── config.js            # Configuration and constants
+│   └── components/          # Reusable components
+│       ├── BackendSelector/ # Backend selection component
+│       ├── FileUpload/      # File upload component
+│       ├── ResultView/      # Result display component
+│       └── ComparisonView/  # Side-by-side comparison component
 ├── package.json             # Dependencies and scripts
 ├── vite.config.js           # Vite configuration
 └── index.html              # HTML template
@@ -82,6 +96,7 @@ web-client/
 - **React Markdown**: Markdown rendering
 - **Axios**: HTTP client for API calls
 - **Lucide React**: Icon library
+- **React Dropzone**: File upload with drag and drop
 
 ### Development Dependencies
 - **Vite**: Build tool and dev server
@@ -99,8 +114,9 @@ web-client/
 - Can be extended with additional components in `src/components/`
 
 ### API Configuration
-- Server URL is configured in `vite.config.js`
-- Change the proxy target if server runs on different port
+- Server URL is configured in `vite.config.js` (proxies to orchestrator on port 8080)
+- Backend selection is handled through the `backend` parameter in API requests
+- Change the proxy target if orchestrator runs on different port
 
 ## Build for Production
 
@@ -112,10 +128,12 @@ This creates a `dist` folder with optimized production files.
 
 ## Troubleshooting
 
-1. **Connection Errors**: Ensure Flask server is running on port 5000
-2. **CORS Issues**: Check Flask server CORS configuration
+1. **Connection Errors**: Ensure Orchestrator server is running on port 8080 and backends on 5000/5001
+2. **CORS Issues**: Orchestrator handles CORS; check orchestrator configuration
 3. **Build Errors**: Clear node_modules and reinstall dependencies
-4. **Image Upload Issues**: Verify image format and size
+4. **File Upload Issues**: Verify file format and size (images and PDFs supported)
+5. **Backend Selection Issues**: Check backend health via `/health` endpoints
+6. **PDF Processing Issues**: Ensure PDF backend support is properly configured
 
 ## Browser Support
 
@@ -126,4 +144,4 @@ This creates a `dist` folder with optimized production files.
 
 ## License
 
-Part of the DeepSeek OCR project. See main project for license details.
+Part of the Multi-Backend OCR System project. See main project for license details.
